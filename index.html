@@ -1,0 +1,619 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Film voor Martin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;800&display=swap">
+<style>
+/* A bare cinema: the film fills the screen on black, controls only appear while paused. Black in light and dark mode by choice. */
+:root{ --bg:#000; --ink:#fff7e8; --accent:#e0782f; --veil:rgba(0,0,0,0.45); color-scheme:dark; }
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --bg:#000; --ink:#fff7e8; --accent:#e0782f; --veil:rgba(0,0,0,0.45); } }
+:root[data-theme="dark"]{ --bg:#000; --ink:#fff7e8; --accent:#e0782f; --veil:rgba(0,0,0,0.45); }
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);overflow:hidden;font-family:Nunito,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+.stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg)}
+canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-ratio:16/9;max-height:100dvh;touch-action:manipulation;cursor:pointer}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--veil);transition:opacity .25s}
+.overlay[hidden]{display:none}
+.play{width:min(26vmin,140px);height:min(26vmin,140px);border-radius:50%;border:0;background:var(--accent);color:#1b1410;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.play svg{width:46%;height:46%;margin-left:8%}
+.bottom{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:14px;padding:14px max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left))}
+.bottom input{flex:1 1 auto;min-width:0;accent-color:var(--accent);height:40px}
+.time{font-weight:800;font-variant-numeric:tabular-nums;font-size:15px;white-space:nowrap}
+.icon{flex:0 0 auto;width:44px;height:44px;border-radius:10px;border:0;background:rgba(255,255,255,.14);color:var(--ink);display:grid;place-items:center;cursor:pointer}
+.icon svg{width:22px;height:22px}
+.icon[hidden]{display:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+</style>
+</head>
+<body>
+<div class="stage" id="stage"><canvas id="cv" width="1280" height="720" aria-label="Tekenfilm bij het lied Watch Your Back, Mates"></canvas></div>
+<div class="overlay" id="ov">
+  <button class="play" id="play" aria-label="Afspelen"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg></button>
+  <div class="bottom">
+    <input type="range" id="scrub" min="0" max="246" step="0.1" value="0" aria-label="Positie in de film">
+    <span class="time" id="time">0:00 / 4:06</span>
+    <button class="icon" id="fs" aria-label="Volledig scherm" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+  </div>
+</div>
+<audio id="au" src="lied.mp3" preload="auto"></audio>
+<script>
+(() => {
+const W = 1280, H = 720, BEAT = 60 / 140;
+const cv = document.getElementById('cv'); const mainCtx = cv.getContext('2d'); let ctx = mainCtx;
+const au = document.getElementById('au');
+const $ = id => document.getElementById(id);
+
+/* ---------- assets ---------- */
+const DECORS = ['01-outback-nacht','02-sydney','03-blue-mountains','04-outback-weg','05-touringcar-binnen','06-touringcar-nacht','07-cradle-mountain','08-wineglass-bay','09-bos-nacht','10-halls-gap','11-twelve-apostles','12-uluru'];
+const SPRITES = ['boef','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
+const IMG = {};
+let loaded = 0, ready = false;
+const total = DECORS.length + SPRITES.length;
+function loadAll(){
+  const one = (n, ext) => new Promise(res => { const i = new Image(); i.onload = () => { loaded++; res(); }; i.onerror = () => { loaded++; res(); }; i.src = 'img/' + n + ext; IMG[n] = i; });
+  return Promise.all([...DECORS.map(n => one(n, '.jpg')), ...SPRITES.map(n => one(n, '.webp'))]);
+}
+const ok = n => IMG[n] && IMG[n].complete && IMG[n].naturalWidth > 0;
+
+/* silhouettes for night shapes */
+const SIL = {};
+function sil(n, color){
+  const k = n + color; if (SIL[k]) return SIL[k];
+  const im = IMG[n], c = document.createElement('canvas'); c.width = im.width; c.height = im.height;
+  const g = c.getContext('2d'); g.drawImage(im, 0, 0); g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, c.width, c.height);
+  return SIL[k] = c;
+}
+
+/* ---------- cues ---------- */
+const CUE_DEFS = [
+  ['intro_talk', 'Begin', 'De verteller begint: "Gather round, mates..."'],
+  ['intro_shout', 'Eerste WOO-SHAAA', 'Tik op de SHAAA, na "this is a true story"'],
+  ['v1', 'Couplet 1', '"Twenty-two strangers flew in from the cold"'],
+  ['v1_2', 'Couplet 1', '"Sydney was shining..."'],
+  ['v1_bm', 'Couplet 1', '"...the Blue Mountains old" (decor wisselt)'],
+  ['v1_3', 'Couplet 1', '"Martin said no worries and counted us twice"'],
+  ['v1_4', 'Couplet 1', '"\'Cause losing a tourist down here isn\'t nice"'],
+  ['ch1a', 'Refrein 1: WOO-SHAAA', 'Tik op de SHAAA vlak vóór "Down Under we go"'],
+  ['ch1_1', 'Refrein 1', '"Down Under we go and we\'re having a blast"'],
+  ['ch1_2', 'Refrein 1', '"Stay close to the group and don\'t walk in last"'],
+  ['ch1_3', 'Refrein 1', '"G\'day mate, no worries, but watch your back"'],
+  ['ch1b', 'Refrein 1: WOO-SHAAA', 'Tik op de SHAAA na "but watch your back"'],
+  ['v2', 'Couplet 2', '"We squeezed in a minibus, knees in our face"'],
+  ['v2_2', 'Couplet 2', '"The aircon was dying, no air and no space"'],
+  ['v2_3', 'Couplet 2', '"We moaned and we groaned, so Martin got tough"'],
+  ['v2_4', 'Couplet 2', '"And found us a bus that was more than enough"'],
+  ['echo', 'Echostuk', '"Hello?"'],
+  ['echo_2', 'Echostuk', '"Is anybody back there?"'],
+  ['echo_3', 'Echostuk', '"Better not sit in the back..."'],
+  ['v3', 'Couplet 3', '"Tassie gave wombats with square little poo"'],
+  ['v3_2', 'Couplet 3', '"Cradle in sunshine..."'],
+  ['v3_wg', 'Couplet 3', '"...Wineglass Bay blue" (decor wisselt)'],
+  ['v3b', 'Couplet 3', '"Then the bus went quiet, our guide dimmed the light"'],
+  ['v3_4', 'Couplet 3', '"And told us the tale of that cold Tassie night"'],
+  ['pearce', 'Verhaal van Pearce', '"Eighteen twenty-two... eight convicts ran free"'],
+  ['pearce_2', 'Verhaal van Pearce', '"No food in the bush..."'],
+  ['pearce_3', 'Verhaal van Pearce', '"And one by one... the group got thin"'],
+  ['pearce_4', 'Verhaal van Pearce', '"Only Alexander Pearce came walking back in"'],
+  ['pearce_5', 'Verhaal van Pearce', '"With an axe in his hand..."'],
+  ['pearce_shout', 'De luidste WOO-SHAAA', 'Na "and a very full belly"'],
+  ['ch2a', 'Refrein 2: WOO-SHAAA', 'Tik op de SHAAA vlak vóór "Down Under we go"'],
+  ['ch2_1', 'Refrein 2', '"Down Under we go and we\'re having a blast"'],
+  ['ch2_2', 'Refrein 2', '"Stay close to the group and don\'t walk in last"'],
+  ['ch2_3', 'Refrein 2', '"G\'day mate, no worries, but watch your back"'],
+  ['ch2b', 'Refrein 2: WOO-SHAAA', 'Tik op de SHAAA na "but watch your back"'],
+  ['v4', 'Couplet 4', '"Kangaroos in Halls Gap, koalas up high"'],
+  ['v4_2', 'Couplet 4', '"Twelve Apostles, only eight..."'],
+  ['v4_3', 'Couplet 4', '"Camel on the barbie, Uluru glowing red"'],
+  ['v4_4', 'Couplet 4', '"We\'re still counting heads before we go to bed"'],
+  ['fin_a', 'Slotrefrein: WOO-SHAAA', 'Tik op de SHAAA vlak vóór "Martin, oh Martin"'],
+  ['fin_1', 'Slotrefrein', '"Martin, oh Martin, you\'re a legend, mate"'],
+  ['fin_2', 'Slotrefrein', '"You led us Down Under and kept us all straight"'],
+  ['fin_3', 'Slotrefrein', '"You counted us daily, not one on a plate"'],
+  ['fin_b', 'Slotrefrein: WOO-SHAAA', 'Tik op de SHAAA na "not one on a plate"'],
+  ['outro', 'Het slot', '"Sleep tight, mates..."'],
+  ['outro_shout', 'Laatste woo-shaa', 'De zachte "woo... shaaa" in de verte']
+];
+const CUE_KEYS = CUE_DEFS.map(d => d[0]);
+const MEASURED = {"intro_shout":12.26,"v1":53.32,"ch1a":69.28,"ch1b":83.04,"v2":89.75,"echo":105.18,"v3":115.99,"v3b":122.42,"pearce":131.32,"pearce_shout":146.86,"ch2a":152.04,"ch2b":168,"v4":176.3,"fin_a":194.97,"fin_b":210.2,"outro":216.75,"intro_talk":2.57,"outro_shout":221.45,"v1_2":56.77,"v1_bm":58.1,"v1_3":59.83,"v1_4":63.32,"ch1_1":71.62,"ch1_2":75.24,"ch1_3":78.74,"v2_2":93.16,"v2_3":96.47,"v2_4":99.85,"echo_2":108.02,"echo_3":111.15,"v3_2":119.22,"v3_wg":120.82,"v3_4":125.87,"pearce_2":135.17,"pearce_3":138.46,"pearce_4":141.64,"pearce_5":145.02,"ch2_1":156.66,"ch2_2":160.18,"ch2_3":163.33,"v4_2":179.51,"v4_3":183.18,"v4_4":186.6,"fin_1":198.98,"fin_2":202.07,"fin_3":205.44};
+// fill cues that were never measured by spreading them evenly between their measured neighbours
+function fillCues(c){
+  const known = CUE_KEYS.map(k => isFinite(c[k]) ? +c[k] : null);
+  if (known[0] == null) c.intro_talk = known[0] = Math.max(0.3, (known[1] ?? 6) - 4);
+  const last = known.length - 1;
+  if (known[last] == null) { let j = last; while (j > 0 && known[j] == null) j--; known[last] = known[j] + 6; c[CUE_KEYS[last]] = known[last]; }
+  for (let i = 0; i < known.length; i++) {
+    if (known[i] != null) continue;
+    let a = i - 1; while (known[a] == null) a--; let b = i + 1; while (known[b] == null) b++;
+    c[CUE_KEYS[i]] = +(known[a] + (known[b] - known[a]) * (i - a) / (b - a)).toFixed(2);
+  }
+  if (!Array.isArray(c.extras)) c.extras = [];
+  return c;
+}
+const DEFAULT_CUES = fillCues(Object.assign({}, MEASURED, { extras: [] }));
+const STORE = 'wybm-cues-v1';
+let CUES = structuredClone(DEFAULT_CUES);
+function loadCues(){
+  try { const s = JSON.parse(localStorage.getItem(STORE) || 'null'); if (s && typeof s === 'object') return fillCues(Object.assign({}, MEASURED, s)); } catch (e) {}
+  return structuredClone(DEFAULT_CUES);
+}
+function saveCues(){ try { localStorage.setItem(STORE, JSON.stringify(CUES)); } catch (e) {} }
+function dur(){ return isFinite(au.duration) && au.duration > 0 ? au.duration : 246; }
+
+/* ---------- lyrics ---------- */
+const L = {
+  intro: ['Gather round, mates... this is a true story...'],
+  v1: ['Twenty-two strangers flew in from the cold', 'Sydney was shining, the Blue Mountains old', 'Martin said "no worries" and counted us twice', "'Cause losing a tourist down here isn't nice"],
+  ch: ['Down Under we go and we’re having a blast', 'Stay close to the group and don’t walk in last', 'G’day mate, no worries, but watch your back'],
+  v2: ['We squeezed in a minibus, knees in our face', 'The aircon was dying, no air and no space', 'We moaned and we groaned, so Martin got tough', 'And found us a bus that was more than enough'],
+  echo: ['Hello? (hello... hello...)', 'Is anybody back there? (there... there...)', 'Better not sit in the back... (back... back...)'],
+  v3: ['Tassie gave wombats with square little poo', 'Cradle in sunshine, Wineglass Bay blue', 'Then the bus went quiet, our guide dimmed the light', 'And told us the tale of that cold Tassie night'],
+  pearce: ['Eighteen twenty-two... eight convicts ran free...', 'No food in the bush... as far as you could see...', 'And one by one... the group got thin...', 'Only Alexander Pearce came walking back in...', 'With an axe in his hand... and a very full belly...'],
+  v4: ['Kangaroos in Halls Gap, koalas up high', 'Twelve Apostles, only eight, don’t ask us why', 'Camel on the barbie, Uluru glowing red', 'We’re still counting heads before we go to bed'],
+  fin: ['Martin, oh Martin, you’re a legend, mate', 'You led us Down Under and kept us all straight', 'You counted us daily, not one on a plate'],
+  outro: ['Sleep tight, mates...']
+};
+
+/* ---------- helpers ---------- */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, k) => a + (b - a) * k;
+const ease = k => k < 0 ? 0 : k > 1 ? 1 : k * k * (3 - 2 * k);
+function pop(lt, start, d = 0.35){
+  const k = (lt - start) / d; if (k <= 0) return 0; if (k >= 1) return 1;
+  return 1 + Math.sin(k * Math.PI * 2.2) * (1 - k) * 0.35 * (k > 0.3 ? 1 : k / 0.3) - (1 - k) * (1 - k) * 0.6 * (k < 0.4 ? 1 : 0);
+}
+function splitTimes(a, b, n){ const out = []; for (let i = 0; i <= n; i++) out.push(a + (b - a) * i / n); return out; }
+function idxIn(t, b){ for (let i = 0; i < b.length - 1; i++) if (t < b[i + 1]) return [i, clamp((t - b[i]) / (b[i + 1] - b[i]), 0, 1)]; return [b.length - 2, 1]; }
+function rng(seed){ let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+const STARS = (() => { const r = rng(7); const a = []; for (let i = 0; i < 140; i++) a.push([r() * W, r() * H * 0.55, r() * 1.8 + 0.4, r() * 6]); return a; })();
+function beatBob(t, ph = 0, amp = 8){ const b = (t / BEAT + ph); return { y: -Math.abs(Math.sin(Math.PI * b)) * amp, rot: Math.sin(Math.PI * b) * 0.045 }; }
+
+function decor(n, p = 0, o = {}){
+  if (!ok(n)) { ctx.fillStyle = '#20180f'; ctx.fillRect(0, 0, W, H); return; }
+  const im = IMG[n]; ctx.save();
+  const z = 1 + (o.zoom ?? 0.05) * p;
+  ctx.translate(W / 2 + (o.panX ?? 0) * p, H / 2 + (o.panY ?? 0) * p); ctx.scale(z, z); ctx.translate(-W / 2, -H / 2);
+  if (o.scroll != null) {
+    const off = ((o.scroll % (2 * W)) + 2 * W) % (2 * W);
+    for (let k = -1; k < 3; k++) {
+      const x = k * W - off;
+      if (x > W || x + W < 0) continue;
+      if (Math.abs(k) % 2 === 1) { ctx.save(); ctx.translate(x + W, 0); ctx.scale(-1, 1); ctx.drawImage(im, 0, 0, W + 1, H); ctx.restore(); }
+      else ctx.drawImage(im, x, 0, W + 1, H);
+    }
+  } else ctx.drawImage(im, 0, 0, W, H);
+  ctx.restore();
+}
+function actor(n, x, gy, h, o = {}){
+  if (!ok(n)) return;
+  const im = o.sil ? sil(n, o.sil) : IMG[n];
+  const iw = IMG[n].width, ih = IMG[n].height, w = h * iw / ih;
+  ctx.save(); ctx.translate(x, gy); ctx.rotate(o.rot || 0);
+  ctx.scale((o.flip ? -1 : 1) * (o.sx || 1), o.sy || 1);
+  ctx.globalAlpha = o.alpha ?? 1;
+  ctx.drawImage(im, -w / 2, -h, w, h);
+  ctx.restore();
+}
+function headCrop(n){ const im = IMG[n]; return [0, 0, im.width, im.height * 0.5]; }
+function head(n, x, cy, w, o = {}){
+  if (!ok(n)) return; const [sx, sy, sw, sh] = headCrop(n); const h = w * sh / sw;
+  ctx.save(); ctx.translate(x, cy); ctx.rotate(o.rot || 0); ctx.scale(o.sx || 1, o.sy || 1); ctx.globalAlpha = o.alpha ?? 1;
+  ctx.drawImage(IMG[n], sx, sy, sw, sh, -w / 2, -h / 2, w, h); ctx.restore();
+}
+/* Martin: body plus a separate head that wobbles */
+function martin(x, gy, h, o = {}){
+  const body = IMG['martin-lijf'], hd = IMG['martin-hoofd-' + (o.head || 'lach')];
+  if (!ok('martin-lijf') || !hd || !hd.naturalWidth) return;
+  const s = h / 788, bw = body.width * s, bh = body.height * s, nx = 272 * s, ny = 100 * s;
+  ctx.save(); ctx.translate(x, gy); ctx.rotate(o.rot || 0); if (o.flip) ctx.scale(-1, 1); ctx.globalAlpha = o.alpha ?? 1;
+  ctx.drawImage(body, -nx, -bh, bw, bh);
+  const hw = 361 * s, hh = hw * hd.height / hd.width;
+  ctx.translate(0, -bh + ny); ctx.rotate(o.headRot || 0);
+  ctx.drawImage(hd, -hw / 2, -hh + hh * 0.06, hw, hh);
+  ctx.restore();
+}
+function ctext(str, x, y, size, o = {}){
+  const sc = o.scale ?? 1; if (sc <= 0.01) return;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(o.rot || 0); ctx.scale(sc, sc); ctx.globalAlpha = o.alpha ?? 1;
+  ctx.font = o.num ? `800 ${size}px Nunito, "Arial Black", sans-serif` : `${size}px Bangers, Impact, "Arial Black", sans-serif`; ctx.textAlign = o.align || 'center'; ctx.textBaseline = 'middle';
+  ctx.lineJoin = 'round'; ctx.lineWidth = size * 0.17; ctx.strokeStyle = o.stroke || '#1b1410'; ctx.strokeText(str, 0, 0);
+  ctx.fillStyle = o.fill || '#ffd23f'; ctx.fillText(str, 0, 0); ctx.restore();
+}
+function shade(color, a){ ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = color; ctx.fillRect(-40, -40, W + 80, H + 80); ctx.restore(); }
+function stars(t, a = 1){ ctx.save(); for (const [x, y, r, ph] of STARS) { ctx.globalAlpha = a * (0.55 + 0.45 * Math.sin(t * 2 + ph)); ctx.fillStyle = '#fff7dc'; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); } ctx.restore(); }
+function rain(t, n = 160, a = 0.45){ ctx.save(); ctx.strokeStyle = 'rgba(190,210,255,' + a + ')'; ctx.lineWidth = 1.6; ctx.beginPath(); const r = rng(3); for (let i = 0; i < n; i++) { const x0 = r() * (W + 200), sp = 700 + r() * 500, y = ((r() * H + t * sp) % (H + 60)) - 30, x = (x0 - (t * sp * 0.25) % (W + 200) + W + 200) % (W + 200) - 100; ctx.moveTo(x, y); ctx.lineTo(x - 7, y + 22); } ctx.stroke(); ctx.restore(); }
+function confetti(t, lt){ ctx.save(); const r = rng(11); const cols = ['#f2b33d','#e0782f','#8fc48a','#6fa8ff','#e86fbe','#fff7dc']; for (let i = 0; i < 90; i++) { const x = r() * W, sp = 120 + r() * 160, y = ((r() * H) + lt * sp) % (H + 40) - 20, rot = lt * (2 + r() * 4) + i; ctx.save(); ctx.translate(x + Math.sin(lt * 2 + i) * 18, y); ctx.rotate(rot); ctx.fillStyle = cols[i % cols.length]; ctx.fillRect(-6, -3, 12, 6); ctx.restore(); } ctx.restore(); }
+function puffs(x, y, t, n = 4, col = 'rgba(200,170,140,0.55)'){ ctx.save(); ctx.fillStyle = col; for (let i = 0; i < n; i++) { const k = ((t * 1.5 + i / n) % 1); ctx.globalAlpha = 1 - k; ctx.beginPath(); ctx.arc(x + k * 120, y - k * 40, 14 + k * 30, 0, 7); ctx.fill(); } ctx.restore(); }
+function smoke(x, y, t){ ctx.save(); for (let i = 0; i < 5; i++) { const k = ((t * 0.6 + i / 5) % 1); ctx.globalAlpha = 0.5 * (1 - k); ctx.fillStyle = '#d9d4cc'; ctx.beginPath(); ctx.arc(x + Math.sin(k * 6 + i) * 14, y - k * 140, 10 + k * 22, 0, 7); ctx.fill(); } ctx.restore(); }
+function counter(nums, positions, lt, start, gap){ nums.forEach((txt, i) => { const s = pop(lt, start + i * gap); if (s > 0) ctext(txt, positions[i][0], positions[i][1], 54, { scale: s, num: true }); }); }
+
+/* ---------- timeline ---------- */
+let TL = null;
+function build(){
+  const C = CUES, D = dur();
+  const segs = [], subs = [];
+  const add = (from, to, fn, key) => { if (to > from) segs.push({ from, to, fn, key }); };
+  const SUBS = [
+    [L.intro, ['intro_talk', 'intro_shout']], [L.v1, ['v1', 'v1_2', 'v1_3', 'v1_4', 'ch1a']], [L.ch, ['ch1_1', 'ch1_2', 'ch1_3', 'ch1b']],
+    [L.v2, ['v2', 'v2_2', 'v2_3', 'v2_4', 'echo']], [L.echo, ['echo', 'echo_2', 'echo_3', 'v3']], [L.v3, ['v3', 'v3_2', 'v3b', 'v3_4', 'pearce']],
+    [L.pearce, ['pearce', 'pearce_2', 'pearce_3', 'pearce_4', 'pearce_5', 'pearce_shout']], [L.ch, ['ch2_1', 'ch2_2', 'ch2_3', 'ch2b']],
+    [L.v4, ['v4', 'v4_2', 'v4_3', 'v4_4', 'fin_a']], [L.fin, ['fin_1', 'fin_2', 'fin_3', 'fin_b']], [L.outro, ['outro', 'outro_shout']]
+  ];
+  for (const [arr, ks] of SUBS) arr.forEach((tx, i) => { const a = C[ks[i]], b = C[ks[i + 1]]; subs.push({ a, b: Math.max(a + 0.5, Math.min(b - 0.25, a + 7)), tx }); });
+  add(0, C.v1, sIntro, 'intro');
+  add(C.v1, C.ch1a, sV1, 'v1');
+  add(C.ch1a, C.v2, (t, s) => sChorus(t, s, 1), 'ch1');
+  add(C.v2, C.echo, sV2, 'v2');
+  add(C.echo, C.v3, sEcho, 'echo');
+  add(C.v3, C.v3b, sV3a, 'v3a');
+  add(C.v3b, C.pearce, sV3b, 'v3b');
+  add(C.pearce, C.ch2a, sPearce, 'pearce');
+  add(C.ch2a, C.v4, (t, s) => sChorus(t, s, 2), 'ch2');
+  add(C.v4, C.fin_a, sV4, 'v4');
+  add(C.fin_a, C.outro, sFinal, 'fin');
+  add(C.outro, D + 1, sOutro, 'outro');
+  const axes = [C.intro_shout, C.ch1a, C.ch1b, C.pearce_shout, C.ch2a, C.ch2b, C.fin_a, C.fin_b, ...(C.extras || [])].filter(v => isFinite(v)).sort((a, b) => a - b).filter((v, i, a) => i === 0 || v - a[i - 1] > 1.2);
+  TL = { segs, subs, axes };
+}
+
+/* ---------- scenes ---------- */
+// t = song time, s = segment {from,to}; lt = local time, p = progress
+function sIntro(t, s){
+  const lt = t - s.from, p = lt / (s.to - s.from);
+  const credStart = CUES.intro_shout + 2.5;
+  if (t >= credStart && s.to - credStart >= 8) return sCredits(t, credStart, s.to);
+  decor('01-outback-nacht', p, { zoom: 0.08 });
+  const k = ease(lt / 1.2), ta = 1 - clamp((t - CUES.intro_shout + 0.8) / 0.25, 0, 1);
+  if (ta > 0) {
+    ctext('WATCH YOUR BACK,', W / 2, 150, 92, { scale: k, rot: -0.04, alpha: ta });
+    ctext('MATES', W / 2, 250, 120, { scale: pop(lt, 0.8), rot: 0.03, fill: '#e0782f', alpha: ta });
+  }
+  for (const lt0 of [1.4, 3.1]) { const d = lt - lt0; if (d > 0 && d < 0.35) shade('#dfe8ff', 0.5 * (1 - d / 0.35)); }
+}
+// opening credits during the instrumental part before verse 1
+const CREDITS = [
+  ['02-sydney', 'martin', 'MARTIN', 'OUR GUIDE'],
+  ['04-outback-weg', 'chauffeuse-staand', 'THE DRIVER', 'BEST STORYTELLER IN OZ'],
+  ['03-blue-mountains', 'robbert', 'ROBBERT', 'STARRING'],
+  ['08-wineglass-bay', 'lisette', 'LISETTE', 'STARRING'],
+  ['10-halls-gap', 'gemma', 'GEMMA', 'STARRING'],
+  ['12-uluru', 'all', '+ 19 MORE MATES', 'AND INTRODUCING']
+];
+function sCredits(t, a, b){
+  const bs = splitTimes(a, b, CREDITS.length); const [i, q] = idxIn(t, bs); const ll = t - bs[i];
+  const [dec, who, name, role] = CREDITS[i];
+  decor(dec, q, { zoom: 0.07, panX: i % 2 ? 30 : -30 });
+  const inX = k => lerp(-260, k, ease(ll / 0.7));
+  const bb = beatBob(t, 0, 8);
+  if (who === 'martin') martin(inX(420), 720 + bb.y, 500, { head: 'lach', headRot: bb.rot * 2 });
+  else if (who === 'all') {
+    [['lisette', 330], ['gemma', 520], ['robbert', 710]].forEach(([n, x], j) => { const b2 = beatBob(t, j * 0.33, 10); actor(n, inX(x), 700 + b2.y, 300, { rot: b2.rot }); });
+    const mb = beatBob(t, 0.5, 8); martin(lerp(1500, 960, ease(ll / 0.9)), 710 + mb.y, 430, { head: 'schater', headRot: mb.rot * 2 });
+  }
+  else actor(who, inX(420), 710 + bb.y, 470, { rot: bb.rot });
+  const tx = who === 'all' ? 640 : 900, ty = who === 'all' ? 150 : 300;
+  ctext(role, tx, ty - 80, 38, { scale: pop(ll, 0.25), fill: '#fff7dc', rot: -0.03 });
+  ctext(name, tx, ty, who === 'all' ? 84 : 100, { scale: pop(ll, 0.5), rot: 0.03, fill: '#f2b33d' });
+}
+function sV1(t, s){
+  const C = CUES, bs = [C.v1, C.v1_2, C.v1_3, C.v1_4, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
+  const b = k => beatBob(t, k, 8);
+  if (t < C.v1_bm) {
+    decor('02-sydney', (t - s.from) / (C.v1_bm - s.from) * 0.9, { zoom: 0.06 });
+    const walkIn = ease((t - s.from) / ((bs[1] - s.from) * 0.8));
+    [['lisette', 400], ['gemma', 600], ['robbert', 800]].forEach(([n, x], j) => { const bb = b(j * 0.33); actor(n, lerp(-200 - j * 160, x, walkIn), 690 + bb.y, 300, { rot: bb.rot }); });
+    if (i === 0) ctext('22 STRANGERS', 330, 120, 70, { scale: pop(ll, 0.3), rot: -0.05 });
+  } else {
+    decor('03-blue-mountains', clamp((t - C.v1_bm) / (s.to - C.v1_bm), 0, 1), { zoom: 0.07, panX: -30 });
+    let rx = 760, mh = 'lach';
+    if (i === 3) { const away = q < 0.55 ? ease(q / 0.4) : 1 - ease((q - 0.6) / 0.35); rx = lerp(760, 1180, away); mh = away > 0.3 ? 'schrik' : 'lach'; if (away > 0.3) ctext('HEY!', 1000, 200, 70, { scale: pop(ll, 0.25 * (bs[4] - bs[3])), rot: 0.1 }); }
+    [['lisette', 360], ['gemma', 560], ['robbert', rx]].forEach(([n, x], j) => { const bb = b(j * 0.33); actor(n, x, 690 + bb.y, 300, { rot: bb.rot }); });
+    if (i >= 2) {
+      const mb = beatBob(t, 0.1, 6); const enter = ease((t - bs[2]) / 1.2);
+      martin(lerp(1400, 1040, enter), 700 + mb.y, 400, { head: mh, headRot: mb.rot * 2 });
+      if (i === 2) { const dd = (bs[3] - bs[2]); counter(['1','2','3','1','2','3'], [[360,330],[560,330],[760,330],[360,330],[560,330],[760,330]].map((p, k) => [p[0], p[1] - (k > 2 ? 60 : 0)]), ll, 0.8, Math.max(0.25, (dd - 1) / 6)); }
+    }
+  }
+}
+function sChorus(t, s, nr){
+  const lt = t - s.from;
+  decor('04-outback-weg', 0, { zoom: 0, scroll: lt * 140 });
+  const mb = beatBob(t, 0, 8);
+  martin(1010, 680 + mb.y, 330, { head: 'lach', headRot: mb.rot * 2.2 });
+  // "don't walk in last": whoever is at the back leapfrogs to the front, on the beat
+  const tb = CUES['ch' + nr + 'b'], l2 = CUES['ch' + nr + '_2'];
+  const X = [380, 560, 740], P = BEAT * 4, HOP = 0.7, el = t - l2;
+  const kMax = Math.max(0, Math.floor((tb - l2 - HOP - 0.6) / P) + 1);
+  const k = el < 0 ? 0 : Math.min(kMax, Math.floor(el / P) + 1);
+  const f = k === 0 ? 1 : clamp((el - (k - 1) * P) / HOP, 0, 1), e = ease(f);
+  const mod = v => ((v % 3) + 3) % 3;
+  const people = [['lisette', 0.0, 0], ['gemma', 0.5, 1], ['robbert', 0.25, 2]].map(([n, ph, j]) => {
+    const from = k === 0 ? j : mod(j - (k - 1)), to = k === 0 ? j : mod(j - k);
+    const jumping = from === 0 && to === 2 && f < 1;
+    return { n, ph, x: lerp(X[from], X[to], e), y: jumping ? -Math.sin(Math.PI * f) * 130 : 0, rot: jumping ? Math.sin(Math.PI * f) * 0.35 : 0, jumping };
+  }).sort((a, b) => a.jumping - b.jumping);
+  for (const p of people) { const b = beatBob(t, p.ph, p.jumping ? 0 : 12); actor(p.n, p.x, 660 + b.y + p.y, 290, { rot: b.rot + p.rot }); }
+  if (t >= l2 && t < tb - 0.6) ctext('DON’T WALK IN LAST!', 640, 140, 56, { scale: pop(t - l2, 0), rot: 0.04, fill: '#fff7dc' });
+}
+function sV2(t, s){
+  const C = CUES, bs = [C.v2, C.v2_2, C.v2_3, C.v2_4, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
+  const scroll = lt * (i === 3 ? 260 : 200);
+  if (i === 1) { ctx.save(); const z = 1 + 0.25 * ease(q * 2); ctx.translate(560, 330); ctx.scale(z, z); ctx.translate(-560, -330); }
+  decor('04-outback-weg', 0, { zoom: 0, scroll });
+  // minibus
+  const busOut = i === 3 ? ease(q / 0.45) : 0;
+  const bx = lerp(lerp(-500, 560, ease(lt / 1.5)), 1900, busOut), by = 640 + Math.sin(t * 22) * 4 + Math.abs(Math.sin(t * 7)) * -6;
+  drawMinibus(bx, by, t, i);
+  puffs(bx + 260, by - 20, t);
+  if (i === 1) { ctext('PFFF...', 780, 140, 64, { scale: pop(ll, 0.3), rot: 0.08, fill: '#d9d4cc' }); ctx.restore(); }
+  if (i === 2) { const e = ease(ll / 0.6); const mb = beatBob(t, 0, 6); martin(lerp(-200, 220, e), 720 + mb.y, 470, { head: 'schreeuw', headRot: mb.rot * 2 }); ctext('BIGGER BUS!', 300, 150, 72, { scale: pop(ll, 0.5), rot: -0.06, fill: '#e0782f' }); }
+  if (i === 3) { const e = clamp((q - 0.12) / 0.88, 0, 1); drawCoach(lerp(-1000, 1290, e), 640 + Math.sin(t * 10) * 2, t); ctext('MORE THAN ENOUGH', 640, 120, 66, { scale: pop(ll, 0.55 * (bs[4] - bs[3])), rot: -0.03 }); }
+}
+function drawMinibus(cx, gy, t, line){
+  if (!ok('minibus-aanhanger')) return;
+  const im = IMG['minibus-aanhanger'], h = 230, w = h * im.width / im.height, s = h / im.height, x0 = cx - w / 2, y0 = gy - h;
+  ctx.drawImage(im, x0, y0, w, h);
+  const wins = [[361, 463], [474, 557], [568, 664], [677, 757]]; const heads = ['robbert', 'lisette', 'gemma', null];
+  wins.forEach(([a, b], k) => {
+    const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 80 * s, wh = 64 * s;
+    ctx.save(); ctx.beginPath(); ctx.rect(wx + 2, wy + 2, ww - 4, wh - 4); ctx.clip();
+    const wob = Math.sin(t * 14 + k) * 0.06;
+    if (heads[k]) head(heads[k], wx + ww / 2, wy + wh * 0.62, ww * 1.25, { sx: 1.18, sy: 0.88, rot: wob });
+    else if (ok('martin-hoofd-schrik')) { const hd = IMG['martin-hoofd-schrik'], hw = ww * 1.2; ctx.translate(wx + ww / 2, wy + wh * 0.62); ctx.rotate(wob); ctx.scale(1.18, 0.88); ctx.drawImage(hd, -hw / 2, -hw * hd.height / hd.width / 2, hw, hw * hd.height / hd.width); }
+    ctx.restore();
+  });
+  if (line <= 1) smoke(x0 + 640 * s, y0 + 10 * s, t);
+}
+function drawCoach(x0, gy, t){
+  if (!ok('touringcar')) return;
+  const im = IMG['touringcar'], h = 290, s = h / im.height, w = im.width * s, y0 = gy - h;
+  ctx.drawImage(im, x0, y0, w, h);
+  const wins = [[567, 648], [659, 738]];
+  [['lisette', 0], ['robbert', 1]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 42 * s, wh = 56 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx, wy, ww, wh); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.7, wh * 1.3, { rot: Math.sin(t * 6 + k) * 0.08 }); ctx.restore(); });
+  // the driver behind the windscreen
+  const fx = x0 + 760 * s, fw = 66 * s, fy = y0 + 48 * s, fh = 100 * s;
+  ctx.save(); ctx.beginPath(); ctx.rect(fx, fy, fw, fh); ctx.clip(); actor('chauffeuse-stuur', fx + fw / 2, fy + fh + 6, fh * 1.25); ctx.restore();
+}
+function sEcho(t, s){
+  const C = CUES, bs = [C.echo, C.echo_2, C.echo_3, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
+  decor('05-touringcar-binnen', lt / (s.to - s.from), { zoom: 0.04 });
+  const VP = [640, 270];
+  const calls = [['HELLO?', 'hello...'], ['ANYBODY BACK THERE?', 'there...'], ['BETTER NOT SIT IN THE BACK...', 'back...']];
+  const [big, ech] = calls[i];
+  ctext(big, 770, 470, i === 2 ? 50 : 66, { scale: pop(ll, 0.1), fill: '#fff7dc' });
+  for (let k = 1; k <= 3; k++) { const d = ll - 0.5 - k * 0.45; if (d < 0) continue; const f = Math.pow(0.68, k); ctext(ech, lerp(770, VP[0], k / 3.4), lerp(420, VP[1], k / 3.4), 60 * f, { alpha: clamp(1 - d * 0.35, 0, 1) * (1 - k * 0.15), fill: '#d9e4ff' }); }
+  const mb = beatBob(t, 0, 5); martin(190, 760 + mb.y, 470, { head: i === 2 ? 'schrik' : 'schreeuw', headRot: mb.rot * 1.5 });
+}
+function sV3a(t, s){
+  const C = CUES, bs = [C.v3, C.v3_2, s.to]; const [i, q] = idxIn(t, bs); const ll = t - bs[i];
+  if (i === 0) {
+    decor('07-cradle-mountain', q, { zoom: 0.06 });
+    const wx = lerp(1150, 620, ease(q / 0.5));
+    [0, 1, 2].forEach(k => { const at = 0.35 + k * 0.18; const sc = pop(q * (bs[1] - bs[0]), at * (bs[1] - bs[0])); if (sc > 0 && ok('keutels')) { ctx.save(); ctx.translate(wx + 260 + k * 95, 660); ctx.scale(sc, sc); actor('keutels', 0, 0, 80); ctx.restore(); } });
+    const wb = beatBob(t, 0, 4); actor('wombat', wx, 670 + wb.y, 230, { flip: true, rot: wb.rot * 0.5 });
+    [['lisette', 170], ['gemma', 330]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.5, 10); actor(n, x, 700 + b.y, 290, { rot: b.rot }); });
+    ctext('SQUARE?!', 360, 130, 74, { scale: pop(ll, (bs[1] - bs[0]) * 0.55), rot: -0.08 });
+  } else {
+    const first = t < C.v3_wg;
+    decor(first ? '07-cradle-mountain' : '08-wineglass-bay', first ? 1 : clamp((t - C.v3_wg) / (s.to - C.v3_wg), 0, 1), { zoom: 0.06 });
+    if (first) { ctext('CRADLE IN SUNSHINE', 640, 120, 62, { scale: pop(ll, 0.1), rot: -0.03 }); }
+    else { ctext('WINEGLASS BAY', 640, 110, 70, { scale: pop(t - C.v3_wg, 0), rot: 0.03, fill: '#7fe0f0' }); }
+    [['lisette', 340], ['gemma', 560], ['robbert', 800]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.33, 10); actor(n, x, 700 + b.y, 300, { rot: b.rot }); });
+  }
+}
+function sV3b(t, s){
+  const bs = [CUES.v3b, CUES.v3_4, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from;
+  decor('06-touringcar-nacht', lt / (s.to - s.from), { zoom: 0.05 });
+  rain(t, 70, 0.25);
+  const dim = i === 0 ? ease(q) * 0.35 : 0.35 + Math.sin(t * 3) * 0.03;
+  shade('#05070f', dim);
+  [['robbert', 200], ['lisette', 360], ['gemma', 520]].forEach(([n, x], j) => head(n, x, 640 + Math.sin(t * 2 + j) * 4, 190));
+  const bob = beatBob(t, 0, 4);
+  actor('chauffeuse-verhaal', 1000, 735 + bob.y, 470, { rot: bob.rot * 0.6 });
+  if (i === 1) ctext('...THAT COLD TASSIE NIGHT', 640, 120, 54, { scale: pop(t - bs[1], 0.4), fill: '#d9e4ff', rot: -0.02 });
+}
+function sPearce(t, s){
+  const C = CUES; const bs = [C.pearce, C.pearce_2, C.pearce_3, C.pearce_4, C.pearce_5, C.pearce_shout - 0.3];
+  const lt = t - s.from; const pre = t < C.pearce_shout - 0.3;
+  decor('09-bos-nacht', clamp(lt / (s.to - s.from), 0, 1), { zoom: 0.1 });
+  shade('#04060d', 0.25); rain(t, 180, 0.5);
+  if (pre) {
+    const [i, q] = idxIn(t, bs); const ll = t - bs[i], dl = bs[i + 1] - bs[i];
+    if (i === 0) { ctext('1822', 640, 160, 130, { scale: pop(ll, 0.2), fill: '#cfc6b8', alpha: 0.9 }); for (let k = 0; k < 8; k++) { const x = lerp(-120, 1400, clamp(q * 1.2 - k * 0.06, 0, 1)); actor('boef', x, 640 + Math.abs(Math.sin(t * 9 + k)) * -10, 150, { sil: '#0b0907', flip: true }); } }
+    if (i === 1) { actor('pearce-sluipend', lerp(1150, 300, ease(q)), 680 + Math.sin(t * 8) * 5, 330, { rot: Math.sin(t * 8) * 0.04 }); ctext('GRRRUMBLE...', 900, 150, 58, { scale: pop(ll, dl * 0.4), rot: 0.06, fill: '#cfc6b8' }); }
+    if (i === 2) { const left = 8 - Math.min(7, Math.floor(q * 8.5)); for (let k = 0; k < 8; k++) { if (k >= left) continue; actor('boef', 170 + k * 135, 640, 170, { sil: '#0b0907' }); } ctext(String(left), 640, 150, 110, { fill: '#cfc6b8', num: true }); }
+    if (i === 3) { actor('pearce-sluipend', lerp(1400, 640, ease(q / 0.8)), 690 + Math.sin(t * 8) * 4, 380); }
+    if (i === 4) { const z = 1 + q * 0.12; ctx.save(); ctx.translate(640, 690); ctx.scale(z, z); actor('pearce-volle-buik', 0, 0, 420); ctx.restore(); ctext('BURP', 860, 260, 60, { scale: pop(ll, dl * 0.6), rot: 0.1, fill: '#cfc6b8' }); }
+  } else {
+    const d = t - C.pearce_shout;
+    actor('pearce-bijl-omhoog', 640, 700, 450, { rot: Math.sin(t * 12) * 0.03 });
+    const sc = pop(d, -0.1); if (sc > 0) { ctx.save(); ctx.translate(1060, 520); ctx.scale(sc, sc); actor('chauffeuse-woeshaa', 0, 200, 280); ctx.restore(); }
+  }
+  for (const lt0 of [bs[1], bs[3]]) { const dd = t - lt0; if (dd > 0 && dd < 0.3) shade('#dfe8ff', 0.45 * (1 - dd / 0.3)); }
+}
+function sV4(t, s){
+  const C = CUES, bs = [C.v4, C.v4_2, C.v4_3, C.v4_4, s.to]; const [i, q] = idxIn(t, bs); const ll = t - bs[i], dl = bs[i + 1] - bs[i];
+  if (i === 0) {
+    decor('10-halls-gap', q, { zoom: 0.05 });
+    actor('koala-slaapt', 150, 290, 170); actor('koala-wakker', 1150, 250, 170, { flip: true });
+    actor('kangoeroe-liggend', 330, 640, 150);
+    const kb = beatBob(t, 0.3, 6); actor('kangoeroe-staand', 870, 640 + kb.y, 230, { rot: kb.rot });
+    const hop = (q * 1.4) % 1; actor('kangoeroe-springend', lerp(1400, -200, q), 600 - Math.sin(hop * Math.PI) * 90, 200, { flip: true });
+    if (ok('koala-slaapt')) ctext('Zzz', 240, 160 - Math.sin(t * 2) * 6, 44, { fill: '#fff7dc', scale: pop(ll, 0.4) });
+  } else if (i === 1) {
+    decor('11-twelve-apostles', q, { zoom: 0.04 });
+    const P = [[161,264],[268,264],[356,230],[475,222],[605,207],[750,199],[879,218],[926,325]];
+    counter(['1','2','3','4','5','6','7','8'], P.map(([x, y]) => [x, y - 40]), ll, 0.2, Math.max(0.12, (dl * 0.6) / 8));
+    [['lisette', 470], ['gemma', 680], ['robbert', 900]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.33, 6); actor(n, x, 720 + b.y, 270, { rot: b.rot }); });
+    ctext('12?', 1130, 140, 96, { scale: pop(ll, dl * 0.75), rot: 0.12, fill: '#e0782f' });
+  } else {
+    const night = i === 3;
+    decor('12-uluru', i === 2 ? q : 1, { zoom: 0.05 });
+    if (night) { shade('#0a1430', 0.62 * ease(q / 0.3)); stars(t, ease(q / 0.3)); }
+    if (i === 2) {
+      actor('barbecue', 470, 690, 240); smoke(470, 470, t);
+      actor('kameel-beledigd', 980, 700, 300, { flip: true });
+      const b = beatBob(t, 0, 8); actor('robbert', 250, 710 + b.y, 290, { rot: b.rot });
+      ctext('HEY!?', 1080, 300, 58, { scale: pop(ll, dl * 0.5), rot: 0.1 });
+    } else {
+      const pos = [['lisette', 330], ['gemma', 500], ['robbert', 670]];
+      pos.forEach(([n, x], j) => { const b = beatBob(t, j * 0.33, 4); actor(n, x, 700 + b.y, 290, { rot: b.rot }); });
+      const mb = beatBob(t, 0, 4); martin(980, 710 + mb.y, 390, { head: 'lach', headRot: mb.rot * 2 });
+      counter(['1','2','3'], pos.map(([, x]) => [x, 330]), ll, 0.4, Math.max(0.3, dl * 0.2));
+    }
+  }
+}
+function sFinal(t, s){
+  const lt = t - s.from;
+  decor('12-uluru', 1, { zoom: 0 }); shade('#0a1430', 0.62); stars(t, 1);
+  const bannerS = pop(t - CUES.fin_1, 0);
+  ctext('THANKS MARTIN!', W / 2, 110, 110, { scale: bannerS, rot: -0.03 });
+  const jump = TL.axes.filter(a => a >= s.from - 0.1 && a <= s.to);
+  const jy = jump.reduce((m, a) => { const d = t - a; return d > 0 && d < 0.5 ? Math.min(m, -Math.sin(d / 0.5 * Math.PI) * 70) : m; }, 0);
+  const line = [['lisette', 200], ['gemma', 380], ['robbert', 900], ['chauffeuse-twee-vingers', 1090]];
+  line.forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 14); actor(n, x, 700 + b.y + jy, 300, { rot: b.rot * 1.4 }); });
+  const mb = beatBob(t, 0.5, 12); martin(640, 710 + mb.y + jy, 470, { head: Math.floor(t / (BEAT * 4)) % 2 ? 'schater' : 'lach', headRot: mb.rot * 3 });
+  confetti(t, lt);
+}
+function sOutro(t, s){
+  const lt = t - s.from, D = dur();
+  decor('01-outback-nacht', clamp(lt / (D - s.from), 0, 1), { zoom: 0.06 });
+  shade('#04060d', 0.25);
+  const sw = Math.sin(t * 1.6);
+  martin(560, 720 + sw * 3, 470, { head: 'lach', headRot: sw * 0.05 });
+  actor('koala-slaapt', 900, 700, 200, { rot: sw * 0.03 });
+  if (ok('koala-slaapt')) ctext('Zzz', 980, 440 - Math.sin(t * 2) * 8, 48, { fill: '#fff7dc', scale: pop(lt, 1.0) });
+  const endStart = Math.max(s.from + 2, Math.min(D - 4, CUES.outro_shout + 1.5));
+  const k = clamp((t - endStart) / 1.2, 0, 1);
+  if (k > 0) {
+    shade('#0b0806', k);
+    ctext('WATCH YOUR BACK, MATES', W / 2, 270, 84, { alpha: k, fill: '#f2b33d' });
+    ctx.save(); ctx.globalAlpha = k; ctx.fillStyle = '#f4e8d6'; ctx.textAlign = 'center'; ctx.font = '700 36px Nunito, sans-serif';
+    ctx.fillText('For Martin, our legend of a guide', W / 2, 370);
+    ctx.fillStyle = '#bfae96'; ctx.font = '700 28px Nunito, sans-serif';
+    ctx.fillText('from the Sawadee Oz crew · Australia, October 2026', W / 2, 420); ctx.restore();
+  }
+}
+
+/* ---------- overlays ---------- */
+function axeOverlay(t){
+  for (const ta of TL.axes) {
+    const d = t - ta;
+    if (d > -0.55 && d < 1.3) {
+      const a = d < 1.0 ? 1 : 1 - (d - 1.0) / 0.3;
+      ctext('WOO... SHAAAAA!', W / 2, 150, 104, { scale: pop(d, -0.55, 0.4), rot: -0.05, alpha: a, fill: '#ffd23f' });
+    }
+    if (d >= 0 && d < 1.0 && ok('bijl')) {
+      // slower flight with a soft trail that fades in, so the axe glides instead of strobing
+      const q = d / 1.0, GA = [1, 0.22, 0.14, 0.09, 0.05];
+      for (let g = GA.length - 1; g >= 0; g--) {
+        const qq = q - g * 0.014; if (qq < 0) continue;
+        const x = -220 + qq * (W + 440), y = H * 0.48 - Math.sin(qq * Math.PI) * 140, r = qq * Math.PI * 3;
+        ctx.save(); ctx.globalAlpha = GA[g] * (g ? clamp(qq / 0.08, 0, 1) : 1); ctx.translate(x, y); ctx.rotate(r);
+        const im = IMG['bijl'], w = 300, h = w * im.height / im.width; ctx.drawImage(im, -w / 2, -h / 2, w, h); ctx.restore();
+      }
+    }
+    if (d > 0.4 && d < 0.8) shade('#ffffff', 0.25 * (1 - (d - 0.4) / 0.4));
+  }
+}
+function shakeAt(t){ let m = 0; for (const ta of TL.axes) { const d = t - ta; if (d > 0.4 && d < 0.8) m = Math.max(m, 10 * (1 - (d - 0.4) / 0.4)); } return m; }
+function subtitle(t){
+  const s = TL.subs.find(x => t >= x.a && t < x.b); if (!s) return;
+  ctx.save(); ctx.font = '800 30px Nunito, "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = Math.min(ctx.measureText(s.tx).width + 48, W - 80); const x = W / 2, y = H - 44;
+  ctx.globalAlpha = clamp(Math.min((t - s.a) / 0.15, (s.b - t) / 0.15), 0, 1);
+  ctx.fillStyle = 'rgba(12,9,7,0.68)'; roundRect(x - w / 2, y - 26, w, 52, 12); ctx.fill();
+  ctx.fillStyle = '#fff7e8'; ctx.fillText(s.tx, x, y + 1, W - 120); ctx.restore();
+}
+function roundRect(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+/* ---------- smooth clock ---------- */
+let clk = { a: 0, p: 0, last: -1 };
+function clockTime(){
+  const a = au.currentTime || 0, now = performance.now(), rate = au.playbackRate || 1;
+  if (au.paused || au.seeking) { clk = { a, p: now, last: a }; return a; }
+  if (a !== clk.last) {
+    const pred = clk.a + (now - clk.p) / 1000 * rate; clk.last = a;
+    if (Math.abs(pred - a) > 0.15) clk = { a, p: now, last: a }; else { clk.a = pred + (a - pred) * 0.15; clk.p = now; }
+  }
+  return clk.a + (now - clk.p) / 1000 * rate;
+}
+
+/* ---------- frame ---------- */
+const off = document.createElement('canvas'); off.width = W; off.height = H; const octx = off.getContext('2d');
+function drawWith(c, fn){ const saved = ctx; ctx = c; c.save(); try { fn(); } finally { c.restore(); ctx = saved; } }
+function frame(t){
+  if (!TL) build();
+  const segs = TL.segs; let i = segs.findIndex(s => t >= s.from && t < s.to); if (i < 0) i = t < (segs[0]?.from ?? 0) ? 0 : segs.length - 1;
+  const seg = segs[i];
+  const m = shakeAt(t);
+  ctx.save(); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  if (m) ctx.translate(Math.sin(t * 45) * m, Math.cos(t * 38) * m * 0.6);
+  const fade = 0.35, since = t - seg.from;
+  // at a WOO-SHAAA the flying axe is the transition: cut hard instead of cross-fading two scenes
+  const axeCut = TL.axes.some(x => Math.abs(x - seg.from) < 0.8);
+  if (i > 0 && since < fade && !axeCut) {
+    const prev = segs[i - 1]; drawWith(ctx, () => prev.fn(Math.min(t, prev.to - 0.001), prev));
+    octx.clearRect(0, 0, W, H); drawWith(octx, () => seg.fn(t, seg));
+    ctx.globalAlpha = since / fade; ctx.drawImage(off, 0, 0); ctx.globalAlpha = 1;
+  } else drawWith(ctx, () => seg.fn(t, seg));
+  axeOverlay(t);
+  ctx.restore();
+  subtitle(t);
+}
+
+
+/* ---------- player ---------- */
+const fmt = s => { s = Math.max(0, s | 0); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const ov = $('ov');
+let wake = null;
+async function keepAwake(on){
+  try { if (on && 'wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } if (!on && wake) { await wake.release(); wake = null; } } catch (e) { wake = null; }
+}
+async function play(){ try { await au.play(); } catch (e) {} }
+function toggle(){ if (au.paused) play(); else au.pause(); }
+$('play').addEventListener('click', e => { e.stopPropagation(); play(); });
+ov.addEventListener('click', e => { if (e.target === ov) play(); });
+cv.addEventListener('click', toggle);
+document.addEventListener('keydown', e => { if (e.code === 'Space' || e.key === 'k') { e.preventDefault(); toggle(); } });
+au.addEventListener('play', () => { ov.hidden = true; keepAwake(true); });
+au.addEventListener('pause', () => { ov.hidden = false; keepAwake(false); });
+au.addEventListener('ended', () => { au.currentTime = 0; });
+au.addEventListener('loadedmetadata', () => { $('scrub').max = dur().toFixed(1); build(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !au.paused) keepAwake(true); });
+let scrubbing = false;
+$('scrub').addEventListener('input', e => { scrubbing = true; au.currentTime = +e.target.value; });
+$('scrub').addEventListener('change', () => { scrubbing = false; });
+// full screen where the browser allows it (not on iPhone); then try to turn the screen sideways
+const root = document.documentElement;
+const fsOk = !!(document.fullscreenEnabled || document.webkitFullscreenEnabled);
+if (fsOk) $('fs').hidden = false;
+$('fs').addEventListener('click', async () => {
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement) { await (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+    await (root.requestFullscreen || root.webkitRequestFullscreen).call(root);
+    try { await screen.orientation.lock('landscape'); } catch (e) {}
+    play();
+  } catch (e) {}
+});
+function drawLoading(){
+  ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+  ctext('LADEN...', W / 2, H / 2 - 30, 80);
+  ctx.fillStyle = '#3b2f26'; ctx.fillRect(W / 2 - 220, H / 2 + 40, 440, 14); ctx.fillStyle = '#e0782f'; ctx.fillRect(W / 2 - 220, H / 2 + 40, 440 * loaded / total, 14);
+}
+function loop(){
+  const t = clockTime();
+  if (!ready) drawLoading(); else frame(au.paused && t < 0.05 ? 1.6 : t);
+  if (!scrubbing) $('scrub').value = t.toFixed(1);
+  $('time').textContent = fmt(t) + ' / ' + fmt(dur());
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+Promise.all([loadAll(), document.fonts ? Promise.all([document.fonts.load('80px Bangers'), document.fonts.load('800 30px Nunito'), document.fonts.load('700 36px Nunito')]).catch(() => {}) : null]).then(() => { ready = true; build(); });
+})();
+</script>
+</body>
+</html>
