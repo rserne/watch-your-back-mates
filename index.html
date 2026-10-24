@@ -45,18 +45,56 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .icon svg{width:22px;height:22px}
 .icon[hidden]{display:none}
 :focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+/* start screen: the title frame of the film behind two big choices */
+.start{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:14px;padding:24px max(16px, env(safe-area-inset-right)) max(22px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));background:linear-gradient(to top, rgba(0,0,0,.88) 0%, rgba(0,0,0,.55) 32%, rgba(0,0,0,0) 62%)}
+.start[hidden]{display:none}
+.kicker{margin:0;font-weight:800;font-size:clamp(15px,2.4vmin,19px);letter-spacing:.02em;text-align:center;text-shadow:0 2px 8px rgba(0,0,0,.8)}
+.choices{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:100%;max-width:560px}
+.big{flex:1 1 220px;min-height:58px;padding:12px 22px;border-radius:999px;border:2px solid rgba(255,255,255,.75);background:rgba(0,0,0,.35);color:var(--ink);font:400 26px/1 Bangers,Impact,sans-serif;letter-spacing:.04em;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer}
+.big.primary{background:var(--accent);border-color:var(--accent);color:#1b1410}
+.big svg{width:20px;height:20px;flex:0 0 auto}
+/* lyrics: a calm reading page in the colours of the film */
+.lyrics{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#15110e;color:var(--ink)}
+.lyrics[hidden]{display:none}
+.lyr-bar{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px max(16px, env(safe-area-inset-right)) 10px max(16px, env(safe-area-inset-left));background:rgba(21,17,14,.94);border-bottom:1px solid #3b2f26}
+.pill{min-height:44px;padding:8px 16px;border-radius:999px;border:1px solid #3b2f26;background:#211a15;color:var(--ink);font:800 16px Nunito,system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+.pill.primary{background:var(--accent);border-color:var(--accent);color:#1b1410}
+.pill svg{width:16px;height:16px}
+.lyr{max-width:620px;margin:0 auto;padding:28px max(20px, env(safe-area-inset-left)) calc(48px + env(safe-area-inset-bottom))}
+.lyr h1{font:400 clamp(40px,9vw,64px)/.95 Bangers,Impact,sans-serif;letter-spacing:.02em;color:#ffd23f;margin:0 0 6px;text-shadow:3px 3px 0 #000}
+.lyr .sub{margin:0 0 30px;color:#bfae96;font-weight:700}
+.lyr h2{font:400 22px Bangers,Impact,sans-serif;letter-spacing:.08em;color:var(--accent);margin:30px 0 8px}
+.lyr p{margin:0;font-size:19px;line-height:1.55;font-weight:700}
+.lyr .spoken{font-style:italic;font-weight:400;color:#d9cdb8}
+.lyr .echo{color:#8f8170;font-weight:400}
+.lyr .shout{font:400 30px/1.25 Bangers,Impact,sans-serif;letter-spacing:.03em;color:#ffd23f;margin:8px 0;text-shadow:2px 2px 0 #000}
+.lyr .shout.soft{font-size:22px;color:#bfae96}
+.lyr .end{margin-top:36px;color:#bfae96;font-weight:700}
+@media (max-width:420px){.lyr p{font-size:17px}.lyr .shout{font-size:27px}}
 </style>
 </head>
 <body>
 <div class="stage" id="stage"><canvas id="cv" width="1280" height="720" aria-label="Tekenfilm bij het lied Watch Your Back, Mates"></canvas></div>
-<div class="overlay" id="ov">
+<div class="overlay" id="ov" hidden>
   <button class="play" id="play" aria-label="Afspelen"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg></button>
   <div class="bottom">
     <input type="range" id="scrub" min="0" max="246" step="0.1" value="0" aria-label="Positie in de film">
     <span class="time" id="time">0:00 / 4:06</span>
+    <button class="icon" id="home" aria-label="Naar het startscherm"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" d="M4 11l8-7 8 7v9h-5v-6h-6v6H4z"/></svg></button>
     <button class="icon" id="fs" aria-label="Volledig scherm" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
 </div>
+<div class="start" id="start">
+  <p class="kicker">Een tekenfilm voor Martin · Sawadee Australië, oktober 2026</p>
+  <div class="choices">
+    <button class="big primary" id="go-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button>
+    <button class="big" id="go-tekst"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" d="M5 6h14M5 11h14M5 16h9"/></svg>Songtekst lezen</button>
+  </div>
+</div>
+<section class="lyrics" id="tekst" hidden aria-label="Songtekst">
+  <div class="lyr-bar"><button class="pill" id="tekst-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="tekst-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
+  <div class="lyr"><h1>Watch Your Back, Mates!</h1><p class="sub">Een lied voor Martin, onze gids door Australië</p><h2>Intro</h2><p class="spoken">Gather round, mates... this is a true story...</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 1</h2><p>Twenty-two strangers flew in from the cold</p><p>Sydney was shining, the Blue Mountains old</p><p>Martin said &quot;no worries&quot; and counted us twice</p><p>&#x27;Cause losing a tourist down here isn&#x27;t nice</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 2</h2><p>We squeezed in a minibus, knees in our face</p><p>The aircon was dying, no air and no space</p><p>We moaned and we groaned, so Martin got tough</p><p>And found us a bus that was more than enough</p><h2>Echo</h2><p class="spoken">Hello? <span class="echo">(hello... hello... hello...)</span></p><p class="spoken">Is anybody back there? <span class="echo">(there... there... there...)</span></p><p class="spoken">Better not sit in the back... <span class="echo">(back... back... back...)</span></p><h2>Couplet 3</h2><p>Tassie gave wombats with square little poo</p><p>Cradle in sunshine, Wineglass Bay blue</p><p>Then the bus went quiet, our guide dimmed the light</p><p>And told us the tale of that cold Tassie night</p><h2>Het verhaal</h2><p class="spoken">Eighteen twenty-two... eight convicts ran free...</p><p class="spoken">No food in the bush... as far as you could see...</p><p class="spoken">And one by one... the group got thin...</p><p class="spoken">Only Alexander Pearce came walking back in...</p><p class="spoken">With an axe in his hand... and a very full belly...</p><p class="shout">WOO... SHAAAAAAAAA!</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 4</h2><p>Kangaroos in Halls Gap, koalas up high</p><p>Twelve Apostles, only eight, don’t ask us why</p><p>Camel on the barbie, Uluru glowing red</p><p>We’re still counting heads before we go to bed</p><h2>Slotrefrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Martin, oh Martin, you’re a legend, mate</p><p>You led us Down Under and kept us all straight</p><p>You counted us daily, not one on a plate</p><p class="shout">WOO... SHAAAAAA!</p><h2>Slot</h2><p class="spoken">Sleep tight, mates...</p><p class="shout soft">woo... shaaaaaa...</p><p class="end">Met dank van de hele groep. Woo... shaaa!</p></div>
+</section>
 <audio id="au" src="lied.mp3" preload="auto"></audio>
 <script>
 (() => {
@@ -597,10 +635,27 @@ async function play(){ try { await au.play(); } catch (e) {} }
 function toggle(){ if (au.paused) play(); else au.pause(); }
 $('play').addEventListener('click', e => { e.stopPropagation(); play(); });
 ov.addEventListener('click', e => { if (e.target === ov) play(); });
-cv.addEventListener('click', toggle);
-document.addEventListener('keydown', e => { if (e.code === 'Space' || e.key === 'k') { e.preventDefault(); toggle(); } });
+// three screens: start (choose), film, lyrics
+let view = 'start';
+function show(v){
+  view = v;
+  $('start').hidden = v !== 'start'; $('tekst').hidden = v !== 'tekst';
+  if (v !== 'film') { au.pause(); ov.hidden = true; }
+  if (v === 'tekst') { $('tekst').scrollTop = 0; $('tekst-terug').focus(); }
+  if (v === 'start') $('go-film').focus();
+}
+$('go-film').addEventListener('click', () => { show('film'); play(); });
+$('go-tekst').addEventListener('click', () => show('tekst'));
+$('tekst-terug').addEventListener('click', () => show('start'));
+$('tekst-film').addEventListener('click', () => { show('film'); play(); });
+$('home').addEventListener('click', e => { e.stopPropagation(); show('start'); });
+cv.addEventListener('click', () => { if (view === 'film') toggle(); });
+document.addEventListener('keydown', e => {
+  if (view === 'film' && (e.code === 'Space' || e.key === 'k')) { e.preventDefault(); toggle(); }
+  else if (view === 'tekst' && e.key === 'Escape') show('start');
+});
 au.addEventListener('play', () => { ov.hidden = true; keepAwake(true); });
-au.addEventListener('pause', () => { ov.hidden = false; keepAwake(false); });
+au.addEventListener('pause', () => { if (view === 'film') ov.hidden = false; keepAwake(false); });
 au.addEventListener('ended', () => { au.currentTime = 0; });
 au.addEventListener('loadedmetadata', () => { $('scrub').max = dur().toFixed(1); build(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !au.paused) keepAwake(true); });
