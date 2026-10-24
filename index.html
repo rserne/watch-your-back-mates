@@ -358,14 +358,13 @@ function drawMinibus(cx, gy, t, line){
   if (!ok('minibus-aanhanger')) return;
   const im = IMG['minibus-aanhanger'], h = 230, w = h * im.width / im.height, s = h / im.height, x0 = cx - w / 2, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[361, 463], [474, 557], [568, 664], [677, 757]]; const heads = [['robbert'], ['lisette'], ['gemma'], null];
+  const wins = [[390, 502], [516, 605], [620, 717], [739, 825]]; const heads = [['robbert'], ['lisette'], ['gemma'], null];
   wins.forEach(([a, b], k) => {
-    const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 80 * s, wh = 64 * s;
-    ctx.save(); ctx.beginPath(); ctx.rect(wx + 2, wy + 2, ww - 4, wh - 4); ctx.clip();
-    const wob = Math.sin(t * 14 + k) * 0.06;
-    if (heads[k] && heads[k].length === 1) head(heads[k][0], wx + ww / 2, wy + wh * 0.62, ww * 1.25, { sx: 1.18, sy: 0.88, rot: wob });
-    else if (heads[k]) heads[k].forEach((n, m) => head(n, wx + ww * (m ? 0.72 : 0.28), wy + wh * 0.66, ww * 0.9, { sx: 1.1, sy: 0.92, rot: wob + (m ? 0.12 : -0.12) }));
-    else if (ok('martin-hoofd-schrik')) { const hd = IMG['martin-hoofd-schrik'], hw = ww * 1.2; ctx.translate(wx + ww / 2, wy + wh * 0.62); ctx.rotate(wob); ctx.scale(1.18, 0.88); ctx.drawImage(hd, -hw / 2, -hw * hd.height / hd.width / 2, hw, hw * hd.height / hd.width); }
+    const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 88 * s, wh = 69 * s;
+    ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip();
+    const wob = Math.sin(t * 14 + k) * 0.05, cx = wx + ww / 2 + (k === 3 ? -ww * 0.08 : 0), cy = wy + wh * 0.6;
+    if (heads[k]) head(heads[k][0], cx, cy, wh * 1.12, { rot: wob });
+    else if (ok('martin-hoofd-schrik')) { const hd = IMG['martin-hoofd-schrik'], hw = wh * 1.08, hh = hw * hd.height / hd.width; ctx.translate(cx, cy); ctx.rotate(wob); ctx.drawImage(hd, -hw / 2, -hh / 2, hw, hh); }
     ctx.restore();
   });
   if (line <= 1) smoke(x0 + 640 * s, y0 + 10 * s, t);
