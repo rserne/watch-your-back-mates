@@ -49,7 +49,7 @@ const $ = id => document.getElementById(id);
 
 /* ---------- assets ---------- */
 const DECORS = ['01-outback-nacht','02-sydney','03-blue-mountains','04-outback-weg','05-touringcar-binnen','06-touringcar-nacht','07-cradle-mountain','08-wineglass-bay','09-bos-nacht','10-halls-gap','11-twelve-apostles','12-uluru'];
-const SPRITES = ['boef','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
+const SPRITES = ['boef','kees','henk','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
 const IMG = {};
 let loaded = 0, ready = false;
 const total = DECORS.length + SPRITES.length;
@@ -280,7 +280,9 @@ const CREDITS = [
   ['03-blue-mountains', 'robbert', 'ROBBERT', 'STARRING'],
   ['08-wineglass-bay', 'lisette', 'LISETTE', 'STARRING'],
   ['10-halls-gap', 'gemma', 'GEMMA', 'STARRING'],
-  ['12-uluru', 'all', '+ 19 MORE MATES', 'AND INTRODUCING']
+  ['07-cradle-mountain', 'kees', 'KEES', 'STARRING'],
+  ['11-twelve-apostles', 'henk', 'HENK', 'STARRING'],
+  ['12-uluru', 'all', '+ 17 MORE MATES', 'AND INTRODUCING']
 ];
 function sCredits(t, a, b){
   const bs = splitTimes(a, b, CREDITS.length); const [i, q] = idxIn(t, bs); const ll = t - bs[i];
@@ -290,8 +292,8 @@ function sCredits(t, a, b){
   const bb = beatBob(t, 0, 8);
   if (who === 'martin') martin(inX(420), 720 + bb.y, 500, { head: 'lach', headRot: bb.rot * 2 });
   else if (who === 'all') {
-    [['lisette', 330], ['gemma', 520], ['robbert', 710]].forEach(([n, x], j) => { const b2 = beatBob(t, j * 0.33, 10); actor(n, inX(x), 700 + b2.y, 300, { rot: b2.rot }); });
-    const mb = beatBob(t, 0.5, 8); martin(lerp(1500, 960, ease(ll / 0.9)), 710 + mb.y, 430, { head: 'schater', headRot: mb.rot * 2 });
+    [['lisette', 150], ['gemma', 300], ['robbert', 450], ['kees', 600], ['henk', 750]].forEach(([n, x], j) => { const b2 = beatBob(t, j * 0.2, 10); actor(n, inX(x), 700 + b2.y, 270, { rot: b2.rot }); });
+    const mb = beatBob(t, 0.5, 8); martin(lerp(1500, 1010, ease(ll / 0.9)), 710 + mb.y, 430, { head: 'schater', headRot: mb.rot * 2 });
   }
   else actor(who, inX(420), 710 + bb.y, 470, { rot: bb.rot });
   const tx = who === 'all' ? 640 : 900, ty = who === 'all' ? 150 : 300;
@@ -304,7 +306,7 @@ function sV1(t, s){
   if (t < C.v1_bm) {
     decor('02-sydney', (t - s.from) / (C.v1_bm - s.from) * 0.9, { zoom: 0.06 });
     const walkIn = ease((t - s.from) / ((bs[1] - s.from) * 0.8));
-    [['lisette', 400], ['gemma', 600], ['robbert', 800]].forEach(([n, x], j) => { const bb = b(j * 0.33); actor(n, lerp(-200 - j * 160, x, walkIn), 690 + bb.y, 300, { rot: bb.rot }); });
+    [['lisette', 300], ['gemma', 460], ['robbert', 620], ['kees', 780], ['henk', 940]].forEach(([n, x], j) => { const bb = b(j * 0.2); actor(n, lerp(-200 - j * 160, x, walkIn), 690 + bb.y, 285, { rot: bb.rot }); });
     if (i === 0) ctext('22 STRANGERS', 330, 120, 70, { scale: pop(ll, 0.3), rot: -0.05 });
   } else {
     decor('03-blue-mountains', clamp((t - C.v1_bm) / (s.to - C.v1_bm), 0, 1), { zoom: 0.07, panX: -30 });
@@ -325,17 +327,17 @@ function sChorus(t, s, nr){
   martin(1010, 680 + mb.y, 330, { head: 'lach', headRot: mb.rot * 2.2 });
   // "don't walk in last": whoever is at the back leapfrogs to the front, on the beat
   const tb = CUES['ch' + nr + 'b'], l2 = CUES['ch' + nr + '_2'];
-  const X = [380, 560, 740], P = BEAT * 4, HOP = 0.7, el = t - l2;
+  const X = [190, 340, 490, 640, 790], N = X.length, P = BEAT * 4, HOP = 0.7, el = t - l2;
   const kMax = Math.max(0, Math.floor((tb - l2 - HOP - 0.6) / P) + 1);
   const k = el < 0 ? 0 : Math.min(kMax, Math.floor(el / P) + 1);
   const f = k === 0 ? 1 : clamp((el - (k - 1) * P) / HOP, 0, 1), e = ease(f);
-  const mod = v => ((v % 3) + 3) % 3;
-  const people = [['lisette', 0.0, 0], ['gemma', 0.5, 1], ['robbert', 0.25, 2]].map(([n, ph, j]) => {
+  const mod = v => ((v % N) + N) % N;
+  const people = [['lisette', 0.0, 0], ['kees', 0.6, 1], ['gemma', 0.5, 2], ['henk', 0.85, 3], ['robbert', 0.25, 4]].map(([n, ph, j]) => {
     const from = k === 0 ? j : mod(j - (k - 1)), to = k === 0 ? j : mod(j - k);
-    const jumping = from === 0 && to === 2 && f < 1;
+    const jumping = from === 0 && to === N - 1 && f < 1;
     return { n, ph, x: lerp(X[from], X[to], e), y: jumping ? -Math.sin(Math.PI * f) * 130 : 0, rot: jumping ? Math.sin(Math.PI * f) * 0.35 : 0, jumping };
   }).sort((a, b) => a.jumping - b.jumping);
-  for (const p of people) { const b = beatBob(t, p.ph, p.jumping ? 0 : 12); actor(p.n, p.x, 660 + b.y + p.y, 290, { rot: b.rot + p.rot }); }
+  for (const p of people) { const b = beatBob(t, p.ph, p.jumping ? 0 : 12); actor(p.n, p.x, 660 + b.y + p.y, 265, { rot: b.rot + p.rot }); }
   if (t >= l2 && t < tb - 0.6) ctext('DON’T WALK IN LAST!', 640, 140, 56, { scale: pop(t - l2, 0), rot: 0.04, fill: '#fff7dc' });
 }
 function sV2(t, s){
@@ -371,8 +373,8 @@ function drawCoach(x0, gy, t){
   if (!ok('touringcar')) return;
   const im = IMG['touringcar'], h = 290, s = h / im.height, w = im.width * s, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[567, 648], [659, 738]];
-  [['lisette', 0], ['robbert', 1]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 42 * s, wh = 56 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx, wy, ww, wh); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.7, wh * 1.3, { rot: Math.sin(t * 6 + k) * 0.08 }); ctx.restore(); });
+  const wins = [[387, 468], [479, 556], [567, 648], [659, 738]];
+  [['kees', 0], ['henk', 1], ['lisette', 2], ['robbert', 3]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 42 * s, wh = 56 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx, wy, ww, wh); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.7, wh * 1.3, { rot: Math.sin(t * 6 + k) * 0.08 }); ctx.restore(); });
   // the driver behind the windscreen
   const fx = x0 + 760 * s, fw = 66 * s, fy = y0 + 48 * s, fh = 100 * s;
   ctx.save(); ctx.beginPath(); ctx.rect(fx, fy, fw, fh); ctx.clip(); actor('chauffeuse-stuur', fx + fw / 2, fy + fh + 6, fh * 1.25); ctx.restore();
@@ -473,8 +475,8 @@ function sFinal(t, s){
   ctext('THANKS MARTIN!', W / 2, 110, 110, { scale: bannerS, rot: -0.03 });
   const jump = TL.axes.filter(a => a >= s.from - 0.1 && a <= s.to);
   const jy = jump.reduce((m, a) => { const d = t - a; return d > 0 && d < 0.5 ? Math.min(m, -Math.sin(d / 0.5 * Math.PI) * 70) : m; }, 0);
-  const line = [['lisette', 200], ['gemma', 380], ['robbert', 900], ['chauffeuse-twee-vingers', 1090]];
-  line.forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 14); actor(n, x, 700 + b.y + jy, 300, { rot: b.rot * 1.4 }); });
+  const line = [['lisette', 110], ['kees', 255], ['gemma', 400], ['robbert', 880], ['henk', 1025], ['chauffeuse-twee-vingers', 1170]];
+  line.forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 14); actor(n, x, 700 + b.y + jy, 275, { rot: b.rot * 1.4 }); });
   const mb = beatBob(t, 0.5, 12); martin(640, 710 + mb.y + jy, 470, { head: Math.floor(t / (BEAT * 4)) % 2 ? 'schater' : 'lach', headRot: mb.rot * 3 });
   confetti(t, lt);
 }
