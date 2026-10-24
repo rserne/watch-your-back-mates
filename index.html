@@ -373,8 +373,8 @@ function drawCoach(x0, gy, t){
   if (!ok('touringcar')) return;
   const im = IMG['touringcar'], h = 290, s = h / im.height, w = im.width * s, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[387, 468], [479, 556], [567, 648], [659, 738]];
-  [['kees', 0], ['henk', 1], ['lisette', 2], ['robbert', 3]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 42 * s, wh = 56 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx, wy, ww, wh); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.7, wh * 1.3, { rot: Math.sin(t * 6 + k) * 0.08 }); ctx.restore(); });
+  const wins = [[384, 470], [477, 558], [564, 652], [657, 741]];
+  [['kees', 0], ['henk', 1], ['lisette', 2], ['robbert', 3]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 40 * s, wh = 61 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.6, wh * 1.12, { rot: Math.sin(t * 6 + k) * 0.05 }); ctx.restore(); });
   // the driver behind the windscreen
   const fx = x0 + 760 * s, fw = 66 * s, fy = y0 + 48 * s, fh = 100 * s;
   ctx.save(); ctx.beginPath(); ctx.rect(fx, fy, fw, fh); ctx.clip(); actor('chauffeuse-stuur', fx + fw / 2, fy + fh + 6, fh * 1.25); ctx.restore();
