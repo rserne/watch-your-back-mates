@@ -358,7 +358,7 @@ function drawMinibus(cx, gy, t, line){
   if (!ok('minibus-aanhanger')) return;
   const im = IMG['minibus-aanhanger'], h = 230, w = h * im.width / im.height, s = h / im.height, x0 = cx - w / 2, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[361, 463], [474, 557], [568, 664], [677, 757]]; const heads = [['robbert', 'kees'], ['lisette'], ['gemma', 'henk'], null];
+  const wins = [[361, 463], [474, 557], [568, 664], [677, 757]]; const heads = [['robbert'], ['lisette'], ['gemma'], null];
   wins.forEach(([a, b], k) => {
     const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 80 * s, wh = 64 * s;
     ctx.save(); ctx.beginPath(); ctx.rect(wx + 2, wy + 2, ww - 4, wh - 4); ctx.clip();
