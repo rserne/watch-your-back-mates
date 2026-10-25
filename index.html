@@ -117,7 +117,8 @@ const $ = id => document.getElementById(id);
 
 /* ---------- assets ---------- */
 const DECORS = ['01-outback-nacht','02-sydney','03-blue-mountains','04-outback-weg','05-touringcar-binnen','06-touringcar-nacht','07-cradle-mountain','08-wineglass-bay','09-bos-nacht','10-halls-gap','11-twelve-apostles','12-uluru'];
-const SPRITES = ['boef','kees','henk','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
+const MATES = ['tanja','betty','ed','william','gijsje','adrie','nellie','dick','anne','john','coby','lut','dirk','geert','els','erik'];
+const SPRITES = [...MATES, 'boef','kees','henk','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
 const IMG = {};
 let loaded = 0, ready = false;
 const total = DECORS.length + SPRITES.length;
@@ -543,20 +544,56 @@ function sFinal(t, s){
   ctext('THANKS MARTIN!', W / 2, 110, 110, { scale: bannerS, rot: -0.03 });
   const jump = TL.axes.filter(a => a >= s.from - 0.1 && a <= s.to);
   const jy = jump.reduce((m, a) => { const d = t - a; return d > 0 && d < 0.5 ? Math.min(m, -Math.sin(d / 0.5 * Math.PI) * 70) : m; }, 0);
+  // the rest of the group in two rows at the back, jumping along
+  MATES.forEach((n, j) => { const back = j % 2, x = 70 + Math.floor(j / 2) * 160 + (back ? 80 : 0), b = beatBob(t, j * 0.13, 10);
+    actor(n, x, (back ? 545 : 605) + b.y + jy * 0.7, back ? 180 : 210, { rot: b.rot }); });
   const line = [['lisette', 110], ['kees', 255], ['gemma', 400], ['robbert', 880], ['henk', 1025], ['chauffeuse-twee-vingers', 1170]];
   line.forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 14); actor(n, x, 700 + b.y + jy, 275, { rot: b.rot * 1.4 }); });
   const mb = beatBob(t, 0.5, 12); martin(640, 710 + mb.y + jy, 470, { head: Math.floor(t / (BEAT * 4)) % 2 ? 'schater' : 'lach', headRot: mb.rot * 3 });
   confetti(t, lt);
 }
+const ROLL = (() => {
+  const nice = n => n.charAt(0).toUpperCase() + n.slice(1);
+  const mates = ['robbert', 'lisette', 'gemma', 'kees', 'henk', ...MATES].sort().map(n => [n, nice(n).toUpperCase(), '']);
+  return [['martin-hoofd-lach', 'MARTIN', 'our guide'], ['chauffeuse-staand', 'THE DRIVER', 'storyteller'], ...mates];
+})();
+function badge(n, x, cy, r){
+  ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.fillStyle = '#2a2016'; ctx.fill(); ctx.clip();
+  if (n === 'martin-hoofd-lach') { const hd = IMG[n]; if (hd && hd.naturalWidth) { const w = r * 2.1, h = w * hd.height / hd.width; ctx.drawImage(hd, x - w / 2, cy - h / 2 + r * 0.08, w, h); } }
+  else head(n, x, cy + r * 0.1, r * 2.5);
+  ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.lineWidth = 5; ctx.strokeStyle = '#f2b33d'; ctx.stroke(); ctx.restore();
+}
 function sOutro(t, s){
   const lt = t - s.from, D = dur();
-  decor('01-outback-nacht', clamp(lt / (D - s.from), 0, 1), { zoom: 0.06 });
-  shade('#04060d', 0.25);
-  const sw = Math.sin(t * 1.6);
-  martin(560, 720 + sw * 3, 470, { head: 'lach', headRot: sw * 0.05 });
-  actor('koala-slaapt', 900, 700, 200, { rot: sw * 0.03 });
-  if (ok('koala-slaapt')) ctext('Zzz', 980, 440 - Math.sin(t * 2) * 8, 48, { fill: '#fff7dc', scale: pop(lt, 1.0) });
-  const endStart = Math.max(s.from + 2, Math.min(D - 4, CUES.outro_shout + 1.5));
+  const rollA = CUES.outro_shout + 1.0, endStart = Math.max(rollA + 6, D - 6);
+  if (t < rollA + 0.6) {
+    decor('01-outback-nacht', clamp(lt / (D - s.from), 0, 1), { zoom: 0.06 });
+    shade('#04060d', 0.25);
+    const sw = Math.sin(t * 1.6);
+    martin(560, 720 + sw * 3, 470, { head: 'lach', headRot: sw * 0.05 });
+    actor('koala-slaapt', 900, 700, 200, { rot: sw * 0.03 });
+    if (ok('koala-slaapt')) ctext('Zzz', 980, 440 - Math.sin(t * 2) * 8, 48, { fill: '#fff7dc', scale: pop(lt, 1.0) });
+  }
+  // credits roll: everyone who was there, with a face and a name
+  const fadeIn = clamp((t - rollA) / 0.6, 0, 1);
+  if (fadeIn > 0) {
+    shade('#0b0806', fadeIn); stars(t, 0.35 * fadeIn);
+    const COLS = 5, RH = 250, top = 230, rows = Math.ceil(ROLL.length / COLS), contentH = top + rows * RH;
+    const prog = clamp((t - rollA) / (endStart - rollA), 0, 1), y0 = H - prog * (contentH + 60);
+    ctx.save(); ctx.globalAlpha = fadeIn;
+    ctext('THE MATES', W / 2, y0 + 90, 96, { fill: '#f2b33d' });
+    ctx.fillStyle = '#bfae96'; ctx.textAlign = 'center'; ctx.font = '700 28px Nunito, sans-serif'; ctx.fillText('Sawadee Oz crew · October 2026', W / 2, y0 + 165);
+    ROLL.forEach(([n, name, role], i) => {
+      const r = Math.floor(i / COLS), c = i % COLS, inRow = Math.min(COLS, ROLL.length - r * COLS);
+      const x = W / 2 + (c - (inRow - 1) / 2) * 230, cy = y0 + top + r * RH + 80;
+      if (cy < -150 || cy > H + 150) return;
+      badge(n, x, cy, 78);
+      ctext(name, x, cy + 115, 40, { fill: '#fff7dc' });
+      if (role) { ctx.fillStyle = '#bfae96'; ctx.font = '700 22px Nunito, sans-serif'; ctx.fillText(role, x, cy + 150); }
+    });
+    ctx.restore();
+  }
   const k = clamp((t - endStart) / 1.2, 0, 1);
   if (k > 0) {
     shade('#0b0806', k);
