@@ -532,10 +532,10 @@ function sV3a(t, s){
   const C = CUES, bs = [C.v3, C.v3_2, s.to]; const [i, q] = idxIn(t, bs); const ll = t - bs[i];
   if (i === 0) {
     decor('07-cradle-mountain', q, { zoom: 0.06 });
-    const wx = lerp(1150, 720, ease(q / 0.5));
-    [0, 1, 2].forEach(k => { const at = 0.35 + k * 0.18; const sc = pop(q * (bs[1] - bs[0]), at * (bs[1] - bs[0])); if (sc > 0 && ok('keutels')) { ctx.save(); ctx.translate(wx + 260 + k * 95, 660); ctx.scale(sc, sc); actor('keutels', 0, 0, 80); ctx.restore(); } });
+    const wx = lerp(1180, 830, ease(q / 0.5));
+    [0, 1, 2].forEach(k => { const at = 0.35 + k * 0.18; const sc = pop(q * (bs[1] - bs[0]), at * (bs[1] - bs[0])); if (sc > 0 && ok('keutels')) { ctx.save(); ctx.translate(wx + 205 + k * 82, 660); ctx.scale(sc, sc); actor('keutels', 0, 0, 80); ctx.restore(); } });
     const wb = beatBob(t, 0, 4); actor('wombat', wx, 670 + wb.y, 230, { flip: true, rot: wb.rot * 0.5 });
-    CAST.wombat.map((n, j) => [n, 90 + j * 125]).forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 10); actor(n, x, 700 + b.y, 255, { rot: b.rot }); });
+    CAST.wombat.map((n, j) => [n, 100 + j * 150]).forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 10); actor(n, x, 712 + b.y, 315, { rot: b.rot }); });
     ctext('SQUARE?!', 300, 130, 74, { scale: pop(ll, (bs[1] - bs[0]) * 0.55), rot: -0.08 });
   } else {
     const first = t < C.v3_wg;
