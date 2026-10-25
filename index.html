@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
-<title>Watch Your Back, Mates!</title>
-<meta name="description" content="Een tekenfilm voor Maarten, onze legende van een gids. Sawadee Australië, oktober 2026.">
+<title>Bedankt, Maarten! · Watch Your Back, Mates!</title>
+<meta name="description" content="Watch Your Back, Mates! Een tekenfilm van de hele groep voor onze gids. Sawadee Australië, oktober 2026.">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
@@ -17,9 +17,9 @@
 <meta name="apple-mobile-web-app-title" content="Maarten">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rserne.github.io/watch-your-back-mates/">
-<meta property="og:title" content="Watch Your Back, Mates!">
-<meta property="og:description" content="Een tekenfilm voor Maarten, onze legende van een gids. Sawadee Australië, oktober 2026.">
-<meta property="og:image" content="https://rserne.github.io/watch-your-back-mates/og.jpg?v=2">
+<meta property="og:title" content="Bedankt, Maarten!">
+<meta property="og:description" content="Watch Your Back, Mates! Een tekenfilm van de hele groep voor onze gids. Sawadee Australië, oktober 2026.">
+<meta property="og:image" content="https://rserne.github.io/watch-your-back-mates/og.jpg?v=3">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -53,6 +53,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .start[hidden]{display:none}
 .start h1{margin:0;font:400 clamp(38px,8vmin,76px)/.95 Bangers,Impact,sans-serif;letter-spacing:.02em;color:#ffd23f;text-align:center;text-shadow:3px 3px 0 #000;text-wrap:balance}
 .stamp{margin:18px 0 0;font-size:12px;color:#6f6152;text-align:center}
+.song{margin:6px 0 0;font:400 clamp(22px,4.2vmin,36px)/1 Bangers,Impact,sans-serif;letter-spacing:.04em;color:#e0782f;text-align:center;text-shadow:2px 2px 0 #000}
 .kicker{margin:8px 0 clamp(16px,3.5vh,32px);font-weight:700;font-size:clamp(14px,2.2vmin,17px);color:#bfae96;text-align:center}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px;width:100%;max-width:900px}
 .tile{display:flex;flex-direction:column;text-align:left;padding:0;border:1px solid #3b2f26;border-radius:18px;overflow:hidden;background:#211a15;color:var(--ink);cursor:pointer;font:inherit;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:transform .15s,border-color .15s}
@@ -66,7 +67,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .tile-body{padding:12px 16px 16px}
 .tile-t{display:block;font:400 26px/1.1 Bangers,Impact,sans-serif;letter-spacing:.04em;color:var(--ink)}
 .tile-s{display:block;margin-top:2px;font-size:14px;color:#bfae96;font-weight:700}
-@media (max-height:500px) and (orientation:landscape){ .start h1{font-size:34px} .kicker{margin:4px 0 12px} .tiles{max-width:760px;grid-template-columns:1fr 1fr 1fr} .tile-lyr{padding:8px 12px;gap:2px} .tile-lyr span{font-size:11px} .tile-lyr b{font-size:17px} .tile-body{padding:8px 12px 10px} .tile-t{font-size:21px} }
+@media (max-height:500px) and (orientation:landscape){ .start h1{font-size:34px} .song{font-size:20px;margin-top:2px} .kicker{margin:4px 0 12px} .tiles{max-width:760px;grid-template-columns:1fr 1fr 1fr} .tile-lyr{padding:8px 12px;gap:2px} .tile-lyr span{font-size:11px} .tile-lyr b{font-size:17px} .tile-body{padding:8px 12px 10px} .tile-t{font-size:21px} }
 /* lyrics: a calm reading page in the colours of the film */
 .lyrics{position:fixed;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;background:#15110e;color:var(--ink)}
 .lyrics[hidden]{display:none}
@@ -126,14 +127,15 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
   </div>
 </div>
 <div class="start" id="start">
-  <h1>Watch Your Back, Mates!</h1>
-  <p class="kicker">Een tekenfilm voor Maarten · Sawadee Australië, oktober 2026</p>
+  <h1>Bedankt, Maarten!</h1>
+  <p class="song">Watch Your Back, Mates!</p>
+  <p class="kicker">Een tekenfilm van de hele groep · Sawadee Australië, oktober 2026</p>
   <div class="tiles">
     <button class="tile" id="go-film"><span class="tile-pic" style="background-image:url(img/poster.jpg?v=2)"><span class="round"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg></span></span><span class="tile-body"><span class="tile-t">De film</span><span class="tile-s">4 minuten · zet het geluid aan</span></span></button>
     <button class="tile" id="go-tekst"><span class="tile-lyr"><span>Twenty-two strangers flew in from the cold</span><span>Sydney was shining, the Blue Mountains old</span><b>WOO... SHAAAAAA!</b><span>Down Under we go and we’re having a blast</span></span><span class="tile-body"><span class="tile-t">De songtekst</span><span class="tile-s">Het hele lied om mee te lezen</span></span></button>
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
-  <p class="stamp">versie 26-10 06.06</p>
+  <p class="stamp">versie 26-10 06.55</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -143,7 +145,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 </section>
 <section class="lyrics" id="tekst" hidden aria-label="Songtekst">
   <div class="lyr-bar"><button class="pill" id="tekst-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="tekst-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
-  <div class="lyr"><h1>Watch Your Back, Mates!</h1><p class="sub">Een lied voor Martin, onze gids door Australië</p><h2>Intro</h2><p class="spoken">Gather round, mates... this is a true story...</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 1</h2><p>Twenty-two strangers flew in from the cold</p><p>Sydney was shining, the Blue Mountains old</p><p>Martin said &quot;no worries&quot; and counted us twice</p><p>&#x27;Cause losing a tourist down here isn&#x27;t nice</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 2</h2><p>We squeezed in a minibus, knees in our face</p><p>The aircon was dying, no air and no space</p><p>We moaned and we groaned, so Martin got tough</p><p>And found us a bus that was more than enough</p><h2>Echo</h2><p class="spoken">Hello? <span class="echo">(hello... hello... hello...)</span></p><p class="spoken">Is anybody back there? <span class="echo">(there... there... there...)</span></p><p class="spoken">Better not sit in the back... <span class="echo">(back... back... back...)</span></p><h2>Couplet 3</h2><p>Tassie gave wombats with square little poo</p><p>Cradle in sunshine, Wineglass Bay blue</p><p>Then the bus went quiet, our guide dimmed the light</p><p>And told us the tale of that cold Tassie night</p><h2>Het verhaal</h2><p class="spoken">Eighteen twenty-two... eight convicts ran free...</p><p class="spoken">No food in the bush... as far as you could see...</p><p class="spoken">And one by one... the group got thin...</p><p class="spoken">Only Alexander Pearce came walking back in...</p><p class="spoken">With an axe in his hand... and a very full belly...</p><p class="shout">WOO... SHAAAAAAAAA!</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 4</h2><p>Kangaroos in Halls Gap, koalas up high</p><p>Twelve Apostles, only eight, don’t ask us why</p><p>Camel on the barbie, Uluru glowing red</p><p>We’re still counting heads before we go to bed</p><h2>Slotrefrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Martin, oh Martin, you’re a legend, mate</p><p>You led us Down Under and kept us all straight</p><p>You counted us daily, not one on a plate</p><p class="shout">WOO... SHAAAAAA!</p><h2>Slot</h2><p class="spoken">Sleep tight, mates...</p><p class="shout soft">woo... shaaaaaa...</p><p class="end">Met dank van de hele groep. Woo... shaaa!</p></div>
+  <div class="lyr"><h1>Watch Your Back, Mates!</h1><p class="sub">Een lied voor Maarten, onze gids door Australië</p><h2>Intro</h2><p class="spoken">Gather round, mates... this is a true story...</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 1</h2><p>Twenty-two strangers flew in from the cold</p><p>Sydney was shining, the Blue Mountains old</p><p>Martin said &quot;no worries&quot; and counted us twice</p><p>&#x27;Cause losing a tourist down here isn&#x27;t nice</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 2</h2><p>We squeezed in a minibus, knees in our face</p><p>The aircon was dying, no air and no space</p><p>We moaned and we groaned, so Martin got tough</p><p>And found us a bus that was more than enough</p><h2>Echo</h2><p class="spoken">Hello? <span class="echo">(hello... hello... hello...)</span></p><p class="spoken">Is anybody back there? <span class="echo">(there... there... there...)</span></p><p class="spoken">Better not sit in the back... <span class="echo">(back... back... back...)</span></p><h2>Couplet 3</h2><p>Tassie gave wombats with square little poo</p><p>Cradle in sunshine, Wineglass Bay blue</p><p>Then the bus went quiet, our guide dimmed the light</p><p>And told us the tale of that cold Tassie night</p><h2>Het verhaal</h2><p class="spoken">Eighteen twenty-two... eight convicts ran free...</p><p class="spoken">No food in the bush... as far as you could see...</p><p class="spoken">And one by one... the group got thin...</p><p class="spoken">Only Alexander Pearce came walking back in...</p><p class="spoken">With an axe in his hand... and a very full belly...</p><p class="shout">WOO... SHAAAAAAAAA!</p><h2>Refrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Down Under we go and we’re having a blast</p><p>Stay close to the group and don’t walk in last</p><p>G’day mate, no worries, but watch your back</p><p class="shout">WOO... SHAAAAAA!</p><h2>Couplet 4</h2><p>Kangaroos in Halls Gap, koalas up high</p><p>Twelve Apostles, only eight, don’t ask us why</p><p>Camel on the barbie, Uluru glowing red</p><p>We’re still counting heads before we go to bed</p><h2>Slotrefrein</h2><p class="shout">WOO... SHAAAAAA!</p><p>Martin, oh Martin, you’re a legend, mate</p><p>You led us Down Under and kept us all straight</p><p>You counted us daily, not one on a plate</p><p class="shout">WOO... SHAAAAAA!</p><h2>Slot</h2><p class="spoken">Sleep tight, mates...</p><p class="shout soft">woo... shaaaaaa...</p><p class="end">Met dank van de hele groep. Woo... shaaa!</p></div>
 </section>
 <audio id="au" src="lied.mp3" preload="auto"></audio>
 <script>
