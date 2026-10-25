@@ -120,7 +120,7 @@ const DECORS = ['01-outback-nacht','02-sydney','03-blue-mountains','04-outback-w
 const MATES = ['tanja','betty','ed','william','gijsje','adrie','nellie','dick','anne','john','coby','lut','dirk','geert','els','erik'];
 // per traveller: a size correction so heads look alike, and where the head sits in the picture [centre x, head height]
 const SIZE = {"robbert":0.992,"lisette":1.035,"gemma":0.938,"kees":0.938,"henk":1.035,"tanja":1.058,"betty":1.035,"ed":0.938,"william":0.973,"gijsje":1.035,"adrie":1.035,"nellie":0.992,"dick":1.034,"anne":0.921,"john":0.955,"coby":0.992,"lut":0.973,"dirk":0.992,"geert":1.013,"els":0.955,"erik":0.955};
-const HEADBOX = {"robbert":[132.8,233.3],"lisette":[117.4,214.7],"gemma":[151.9,261.3],"kees":[170.5,261.3],"henk":[126.6,214.7],"tanja":[138.7,205.3],"betty":[197.9,214.7],"ed":[184.5,261.3],"william":[156.7,242.7],"gijsje":[125.4,214.7],"adrie":[104.9,214.7],"nellie":[116.2,233.3],"dick":[171.7,214.7],"anne":[149.2,270.7],"john":[171.8,252.0],"coby":[181.5,233.3],"lut":[132.3,242.7],"dirk":[181.5,233.3],"geert":[111.2,224.0],"els":[181.1,252.0],"erik":[129.5,252.0]};
+const HEADBOX = {"robbert":[132.8,233.3],"lisette":[117.4,214.7],"gemma":[151.9,261.3],"kees":[170.5,261.3],"henk":[126.6,214.7],"tanja":[138.7,205.3],"betty":[197.9,214.7],"ed":[184.5,261.3],"william":[156.7,242.7],"gijsje":[125.4,214.7],"adrie":[104.9,214.7],"nellie":[116.2,233.3],"dick":[171.7,214.7],"anne":[149.2,270.7],"john":[171.8,252.0],"coby":[181.5,233.3],"lut":[132.3,242.7],"dirk":[181.5,233.3],"geert":[111.2,224.0],"els":[181.1,252.0],"erik":[129.5,252.0],"chauffeuse-staand":[155.1,235.2]};
 // couples walk and appear together
 const UNITS = [['adrie','nellie'],['anne','john'],['betty'],['dick','coby'],['els','erik'],['geert'],['gemma'],['gijsje'],['henk'],['kees'],['lisette'],['lut','dirk'],['robbert'],['tanja'],['william','ed']];
 // every time the film loads, the scenes get a fresh mix of travellers; couples stay together and everyone takes turns
@@ -625,12 +625,20 @@ const ROLL = (() => {
   const mates = UNITS.flat().map(n => [n, nice(n).toUpperCase(), '']);
   return [['martin-hoofd-lach', 'MARTIN', 'our guide'], ['chauffeuse-staand', 'THE DRIVER', 'storyteller'], ...mates];
 })();
-function badge(n, x, cy, r){
-  ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.fillStyle = '#2a2016'; ctx.fill(); ctx.clip();
-  if (n === 'martin-hoofd-lach') { const hd = IMG[n]; if (hd && hd.naturalWidth) { const w = r * 2.1, h = w * hd.height / hd.width; ctx.drawImage(hd, x - w / 2, cy - h / 2 + r * 0.08, w, h); } }
-  else head(n, x, cy + r * 0.08, r * 2.15);
-  ctx.restore();
-  ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.lineWidth = 5; ctx.strokeStyle = '#f2b33d'; ctx.stroke(); ctx.restore();
+// a portrait for the credits: head and shoulders, fading out at the bottom, no frame
+const BUSTS = {};
+function bust(n, x, cy, r){
+  let c = BUSTS[n];
+  if (!c) {
+    const im = IMG[n]; if (!im || !im.naturalWidth) return;
+    c = BUSTS[n] = document.createElement('canvas'); c.width = 240; c.height = 260; const g = c.getContext('2d');
+    if (n === 'martin-hoofd-lach') { const w = 220, h = w * im.height / im.width; g.drawImage(im, 10, 6, w, h); }
+    else { const [hx, hh] = HEADBOX[n] || [im.width / 2, im.height * 0.42], side = hh * 1.3, srcH = side * 260 / 240; g.drawImage(im, hx - side / 2, 0, side, srcH, 0, 4, 240, 260); }
+    g.globalCompositeOperation = 'destination-in';
+    const gr = g.createLinearGradient(0, 0, 0, 260); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(0.72, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 240, 260);
+  }
+  const w = r * 2.2, h = w * 260 / 240; ctx.drawImage(c, x - w / 2, cy - h * 0.55, w, h);
 }
 function sOutro(t, s){
   const lt = t - s.from, D = dur();
@@ -656,7 +664,7 @@ function sOutro(t, s){
       const r = Math.floor(i / COLS), c = i % COLS, inRow = Math.min(COLS, ROLL.length - r * COLS);
       const x = W / 2 + (c - (inRow - 1) / 2) * 230, cy = y0 + top + r * RH + 80;
       if (cy < -150 || cy > H + 150) return;
-      badge(n, x, cy, 78);
+      bust(n, x, cy, 80);
       ctext(name, x, cy + 115, 40, { fill: '#fff7dc' });
       if (role) { ctx.fillStyle = '#bfae96'; ctx.font = '700 22px Nunito, sans-serif'; ctx.fillText(role, x, cy + 150); }
     });
