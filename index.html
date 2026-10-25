@@ -764,7 +764,7 @@ let wake = null;
 async function keepAwake(on){
   try { if (on && 'wakeLock' in navigator && !wake) { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } if (!on && wake) { await wake.release(); wake = null; } } catch (e) { wake = null; }
 }
-async function play(){ try { await au.play(); } catch (e) {} }
+async function play(){ if (au.ended || au.currentTime >= dur() - 0.3) au.currentTime = 0; try { await au.play(); } catch (e) {} }
 function toggle(){ if (au.paused) play(); else au.pause(); }
 $('play').addEventListener('click', e => { e.stopPropagation(); play(); });
 ov.addEventListener('click', e => { if (e.target === ov) play(); });
@@ -789,7 +789,8 @@ document.addEventListener('keydown', e => {
 });
 au.addEventListener('play', () => { ov.hidden = true; keepAwake(true); });
 au.addEventListener('pause', () => { if (view === 'film') ov.hidden = false; keepAwake(false); });
-au.addEventListener('ended', () => { au.currentTime = 0; });
+// at the end: keep the end card in view and show the controls, so Terug and play-again both work
+au.addEventListener('ended', () => { keepAwake(false); if (view === 'film') ov.hidden = false; });
 au.addEventListener('loadedmetadata', () => { $('scrub').max = dur().toFixed(1); build(); });
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !au.paused) keepAwake(true); });
 let scrubbing = false;
