@@ -343,31 +343,39 @@ function sIntro(t, s){
   for (const lt0 of [1.4, 3.1]) { const d = lt - lt0; if (d > 0 && d < 0.35) shade('#dfe8ff', 0.5 * (1 - d / 0.35)); }
 }
 // opening credits during the instrumental part before verse 1
+// opening credits during the instrumental part before verse 1: Martin, the driver, then the whole group walks past
 const CREDITS = [
   ['02-sydney', 'martin', 'MARTIN', 'OUR GUIDE'],
-  ['04-outback-weg', 'chauffeuse-staand', 'THE DRIVER', 'BEST STORYTELLER IN OZ'],
-  ['03-blue-mountains', 'robbert', 'ROBBERT', 'STARRING'],
-  ['08-wineglass-bay', 'lisette', 'LISETTE', 'STARRING'],
-  ['10-halls-gap', 'gemma', 'GEMMA', 'STARRING'],
-  ['07-cradle-mountain', 'kees', 'KEES', 'STARRING'],
-  ['11-twelve-apostles', 'henk', 'HENK', 'STARRING'],
-  ['12-uluru', 'all', '+ 17 MORE MATES', 'AND INTRODUCING']
+  ['04-outback-weg', 'chauffeuse-staand', 'THE DRIVER', 'BEST STORYTELLER IN OZ']
 ];
+const PARADE = ['robbert', 'lisette', 'gemma', 'kees', 'henk', ...MATES].sort();
 function sCredits(t, a, b){
-  const bs = splitTimes(a, b, CREDITS.length); const [i, q] = idxIn(t, bs); const ll = t - bs[i];
+  const CARD = 6, pa = a + CREDITS.length * CARD;
+  if (t >= pa && b - pa > 8) return sParade(t, pa, b);
+  const i = Math.min(CREDITS.length - 1, Math.floor((t - a) / CARD)), ll = t - (a + i * CARD), q = clamp(ll / CARD, 0, 1);
   const [dec, who, name, role] = CREDITS[i];
   decor(dec, q, { zoom: 0.07, panX: i % 2 ? 30 : -30 });
   const inX = k => lerp(-260, k, ease(ll / 0.7));
   const bb = beatBob(t, 0, 8);
   if (who === 'martin') martin(inX(420), 720 + bb.y, 500, { head: 'lach', headRot: bb.rot * 2 });
-  else if (who === 'all') {
-    [['lisette', 150], ['gemma', 300], ['robbert', 450], ['kees', 600], ['henk', 750]].forEach(([n, x], j) => { const b2 = beatBob(t, j * 0.2, 10); actor(n, inX(x), 700 + b2.y, 270, { rot: b2.rot }); });
-    const mb = beatBob(t, 0.5, 8); martin(lerp(1500, 1010, ease(ll / 0.9)), 710 + mb.y, 430, { head: 'schater', headRot: mb.rot * 2 });
-  }
   else actor(who, inX(420), 710 + bb.y, 470, { rot: bb.rot });
-  const tx = who === 'all' ? 640 : 900, ty = who === 'all' ? 150 : 300;
-  ctext(role, tx, ty - 80, 38, { scale: pop(ll, 0.25), fill: '#fff7dc', rot: -0.03 });
-  ctext(name, tx, ty, who === 'all' ? 84 : 100, { scale: pop(ll, 0.5), rot: 0.03, fill: '#f2b33d' });
+  ctext(role, 900, 220, 38, { scale: pop(ll, 0.25), fill: '#fff7dc', rot: -0.03 });
+  ctext(name, 900, 300, 100, { scale: pop(ll, 0.5), rot: 0.03, fill: '#f2b33d' });
+}
+// the mates walk past one by one, each with a name under their feet
+function sParade(t, a, b){
+  const lt = t - a, D = b - a, N = PARADE.length, GAP = 235;
+  const dist = W + 300 + (N - 1) * GAP, v = dist / (D - 0.8);
+  decor('04-outback-weg', 0, { zoom: 0, scroll: lt * v * 0.35 });
+  ctext('AND THE MATES', W / 2, 95, 70, { scale: pop(lt, 0.2), fill: '#f2b33d', rot: -0.03 });
+  ctext('SAWADEE OZ CREW', W / 2, 160, 34, { scale: pop(lt, 0.5), fill: '#fff7dc' });
+  PARADE.forEach((n, j) => {
+    const x = W + 150 + j * GAP - lt * v;
+    if (x < -180 || x > W + 180) return;
+    const bb = beatBob(t, j * 0.37, 12);
+    actor(n, x, 625 + bb.y, 290, { rot: bb.rot });
+    ctext(n.toUpperCase(), x, 668, 40, { fill: '#fff7dc' });
+  });
 }
 function sV1(t, s){
   const C = CUES, bs = [C.v1, C.v1_2, C.v1_3, C.v1_4, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
