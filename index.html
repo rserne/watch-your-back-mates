@@ -635,6 +635,9 @@ const ROLL = (() => {
 })();
 // a portrait for the credits: head and shoulders, fading out at the bottom, no frame
 const BUSTS = {};
+// the animals (and one villain) at the very end of the credits
+const GUESTS = [['wombat', 'WOMBAT', 'square poo expert', 150], ['koala-slaapt', 'KOALA', 'slept through it all', 170], ['kangoeroe-staand', 'KANGAROO', 'Halls Gap welcome', 190],
+  ['kameel-beledigd', 'CAMEL', 'on the barbie, sorry', 200], ['pearce-bijl-omhoog', 'ALEXANDER PEARCE', 'brought his own axe', 210]];
 function bust(n, x, cy, r){
   let c = BUSTS[n];
   if (!c) {
@@ -650,7 +653,7 @@ function bust(n, x, cy, r){
 }
 function sOutro(t, s){
   const lt = t - s.from, D = dur();
-  const rollA = CUES.outro_shout + 1.0, endStart = Math.max(rollA + 6, D - 6);
+  const rollA = CUES.outro_shout + 1.0, endStart = Math.max(rollA + 6, D - 4.5);
   if (t < rollA + 0.6) {
     decor('01-outback-nacht', clamp(lt / (D - s.from), 0, 1), { zoom: 0.06 });
     shade('#04060d', 0.25);
@@ -663,8 +666,9 @@ function sOutro(t, s){
   const fadeIn = clamp((t - rollA) / 0.6, 0, 1);
   if (fadeIn > 0) {
     shade('#0b0806', fadeIn); stars(t, 0.35 * fadeIn);
-    const COLS = 5, RH = 320, top = 250, rows = Math.ceil(ROLL.length / COLS), contentH = top + rows * RH;
-    const prog = clamp((t - rollA) / (endStart - rollA), 0, 1), y0 = H - prog * (contentH + 60);
+    const COLS = 5, RH = 320, top = 250, rows = Math.ceil(ROLL.length / COLS), gTop = top + rows * RH + 40, contentH = gTop + 150 + RH;
+    // scroll until the special guests sit in the middle of the screen, then hold for a moment
+    const prog = clamp((t - rollA) / (endStart - 2.2 - rollA), 0, 1), y0 = lerp(H, H / 2 - (gTop + 150 + 90), prog);
     ctx.save(); ctx.globalAlpha = fadeIn;
     ctext('THE MATES', W / 2, y0 + 90, 96, { fill: '#f2b33d' });
     ctx.fillStyle = '#bfae96'; ctx.textAlign = 'center'; ctx.font = '700 28px Nunito, sans-serif'; ctx.fillText('Sawadee Oz crew · October 2026', W / 2, y0 + 165);
@@ -675,6 +679,16 @@ function sOutro(t, s){
       bust(n, x, cy, 80);
       ctext(name, x, cy + 115, 40, { fill: '#fff7dc' });
       if (role) { ctx.fillStyle = '#bfae96'; ctx.font = '700 22px Nunito, sans-serif'; ctx.fillText(role, x, cy + 150); }
+    });
+    // special guests
+    const gy = y0 + gTop;
+    if (gy > -400 && gy < H + 100) ctext('SPECIAL GUESTS', W / 2, gy + 60, 64, { fill: '#f2b33d' });
+    GUESTS.forEach(([n, name, role, h], c) => {
+      const x = W / 2 + (c - (GUESTS.length - 1) / 2) * 250, base = gy + 150 + 170;
+      if (base < -100 || base - h > H + 100) return;
+      const bb = beatBob(t, c * 0.3, 6); actor(n, x, base + bb.y, h, { flip: n === 'kameel-beledigd' });
+      ctext(name, x, base + 40, name.length > 12 ? 26 : 34, { fill: '#fff7dc' });
+      ctx.fillStyle = '#bfae96'; ctx.font = '700 20px Nunito, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(role, x, base + 74);
     });
     ctx.restore();
   }
