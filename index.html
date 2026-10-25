@@ -123,6 +123,24 @@ const SIZE = {"robbert":0.992,"lisette":1.035,"gemma":0.938,"kees":0.938,"henk":
 const HEADBOX = {"robbert":[132.8,233.3],"lisette":[117.4,214.7],"gemma":[151.9,261.3],"kees":[170.5,261.3],"henk":[126.6,214.7],"tanja":[138.7,205.3],"betty":[197.9,214.7],"ed":[184.5,261.3],"william":[156.7,242.7],"gijsje":[125.4,214.7],"adrie":[104.9,214.7],"nellie":[116.2,233.3],"dick":[171.7,214.7],"anne":[149.2,270.7],"john":[171.8,252.0],"coby":[181.5,233.3],"lut":[132.3,242.7],"dirk":[181.5,233.3],"geert":[111.2,224.0],"els":[181.1,252.0],"erik":[129.5,252.0]};
 // couples walk and appear together
 const UNITS = [['adrie','nellie'],['anne','john'],['betty'],['dick','coby'],['els','erik'],['geert'],['gemma'],['gijsje'],['henk'],['kees'],['lisette'],['lut','dirk'],['robbert'],['tanja'],['william','ed']];
+// every time the film loads, the scenes get a fresh mix of travellers; couples stay together and everyone takes turns
+const CAST = (() => {
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let queue = [];
+  const take = n => {
+    const out = []; let guard = 0;
+    while (out.length < n && guard++ < 200) {
+      if (!queue.length) queue = shuffle(UNITS.map(u => u.slice()));
+      const i = queue.findIndex(u => out.length + u.length <= n && !u.some(x => out.includes(x)));
+      if (i < 0) { queue = queue.concat(shuffle(UNITS.map(u => u.slice()))); continue; }
+      out.push(...queue.splice(i, 1)[0]);
+    }
+    return out;
+  };
+  const c = { sydney: take(5), blue: take(5), ch1: take(5), minibus: take(3), coach: take(4), wombat: take(4), cradle: take(5), nightbus: take(5), ch2: take(5), apostles: take(5), count: take(5), front: take(5) };
+  c.back = UNITS.flat().filter(n => !c.front.includes(n));
+  return c;
+})();
 const SPRITES = [...MATES, 'boef','kees','henk','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
 const IMG = {};
 let loaded = 0, ready = false;
@@ -373,20 +391,50 @@ function sCredits(t, a, b){
   ctext(name, 900, 300, 100, { scale: pop(ll, 0.5), rot: 0.03, fill: '#f2b33d' });
 }
 // the mates walk past one by one, each with a name under their feet
+// the mates as holiday snapshots: flash, a polaroid in the middle, then pinned to the board
+const SNAP_DECOR = ['02-sydney', '03-blue-mountains', '07-cradle-mountain', '08-wineglass-bay', '10-halls-gap', '11-twelve-apostles', '12-uluru', '04-outback-weg'];
+let CORK = null;
+function corkboard(){
+  if (!CORK) {
+    CORK = document.createElement('canvas'); CORK.width = W; CORK.height = H; const g = CORK.getContext('2d');
+    g.fillStyle = '#8a5f37'; g.fillRect(0, 0, W, H); const r = rng(5);
+    for (let i = 0; i < 9000; i++) { g.fillStyle = r() < 0.5 ? 'rgba(60,35,15,0.35)' : 'rgba(200,150,95,0.3)'; g.fillRect(r() * W, r() * H, 1 + r() * 2.5, 1 + r() * 2.5); }
+    g.strokeStyle = '#4a2f18'; g.lineWidth = 18; g.strokeRect(9, 9, W - 18, H - 18);
+  }
+  ctx.drawImage(CORK, 0, 0);
+}
+function polaroid(unit, i, cx, cy, sc, rot){
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot); ctx.scale(sc, sc);
+  ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.45)'; ctx.shadowBlur = 18; ctx.shadowOffsetY = 8; ctx.fillStyle = '#fbf8f1'; ctx.fillRect(-180, -200, 360, 410); ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(-160, -180, 320, 300); ctx.clip();
+  const d = SNAP_DECOR[i % SNAP_DECOR.length]; if (ok(d)) { const im = IMG[d], k = 300 / H * 1.15, w = W * k, h = H * k; ctx.drawImage(im, -w / 2 + ((i * 53) % 120 - 60), -180 - (h - 300) * 0.4, w, h); }
+  unit.forEach((n, k) => actor(n, (k - (unit.length - 1) / 2) * 125, 128, 250));
+  ctx.restore();
+  ctx.fillStyle = '#2b2018'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = `${unit.length > 1 ? 40 : 46}px Bangers, Impact, sans-serif`;
+  ctx.fillText(unit.map(n => n.toUpperCase()).join(' & '), 0, 166, 330);
+  ctx.fillStyle = 'rgba(255,238,190,0.75)'; ctx.save(); ctx.translate(0, -202); ctx.rotate(-0.06); ctx.fillRect(-55, -16, 110, 32); ctx.restore();
+  ctx.restore();
+}
 function sParade(t, a, b){
-  const lt = t - a, D = b - a, GAP = 250, PAIR = 160;
-  // x offset of every unit along the parade
-  const offs = []; let acc = 0; PARADE.forEach(u => { offs.push(acc); acc += GAP + (u.length - 1) * PAIR; });
-  const dist = W + 300 + offs[offs.length - 1] + (PARADE[PARADE.length - 1].length - 1) * PAIR, v = dist / (D - 0.8);
-  decor('04-outback-weg', 0, { zoom: 0, scroll: lt * v * 0.35 });
-  ctext('AND THE MATES', W / 2, 95, 70, { scale: pop(lt, 0.2), fill: '#f2b33d', rot: -0.03 });
-  ctext('SAWADEE OZ CREW', W / 2, 160, 34, { scale: pop(lt, 0.5), fill: '#fff7dc' });
-  PARADE.forEach((u, j) => {
-    const x0 = W + 150 + offs[j] - lt * v, mid = x0 + (u.length - 1) * PAIR / 2;
-    if (x0 + (u.length - 1) * PAIR < -200 || x0 > W + 200) return;
-    u.forEach((n, k) => { const bb = beatBob(t, j * 0.37 + k * 0.5, 12); actor(n, x0 + k * PAIR, 625 + bb.y, 285, { rot: bb.rot }); });
-    ctext(u.map(n => n.toUpperCase()).join(' & '), mid, 668, 40, { fill: '#fff7dc' });
-  });
+  const lt = t - a, N = PARADE.length, T0 = 1.3, per = (b - a - T0 - 1.0) / N;
+  corkboard();
+  const COLS = 6, slot = i => [125 + (i % COLS) * 206, 215 + Math.floor(i / COLS) * 195], tilt = i => (((i * 37) % 11) - 5) * 0.025;
+  // title, then it moves up to make room for the photos
+  const up = ease((lt - T0 + 0.3) / 0.6);
+  ctext('AND THE MATES', W / 2, lerp(H / 2 - 40, 70, up), lerp(110, 62, up), { scale: pop(lt, 0.1), fill: '#f2b33d', rot: -0.03 });
+  if (up < 1) ctext('SAWADEE OZ CREW', W / 2, H / 2 + 50, 40, { alpha: 1 - up, fill: '#fff7dc' });
+  const cur = Math.floor((lt - T0) / per);
+  // pinned photos
+  for (let i = 0; i < Math.min(N, cur); i++) { const [x, y] = slot(i); polaroid(PARADE[i], i, x, y, 0.48, tilt(i)); }
+  // the photo being taken now
+  if (cur >= 0 && cur < N) {
+    const p = (lt - T0 - cur * per) / per, [x, y] = slot(cur);
+    const fly = ease((p - 0.62) / 0.3), big = 0.95;
+    const sc = lerp(big * pop(p * per, 0, 0.3), 0.48, fly), px = lerp(W / 2, x, fly), py = lerp(H / 2 + 20, y, fly), r = lerp(0.03 * (cur % 2 ? 1 : -1), tilt(cur), fly);
+    if (p < 0.62) { ctx.save(); ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+    polaroid(PARADE[cur], cur, px, py, sc, r);
+    const f = p * per; if (f < 0.18) shade('#ffffff', 0.85 * (1 - f / 0.18));
+  }
 }
 function sV1(t, s){
   const C = CUES, bs = [C.v1, C.v1_2, C.v1_3, C.v1_4, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
@@ -394,13 +442,13 @@ function sV1(t, s){
   if (t < C.v1_bm) {
     decor('02-sydney', (t - s.from) / (C.v1_bm - s.from) * 0.9, { zoom: 0.06 });
     const walkIn = ease((t - s.from) / ((bs[1] - s.from) * 0.8));
-    [['lisette', 300], ['gemma', 460], ['robbert', 620], ['kees', 780], ['henk', 940]].forEach(([n, x], j) => { const bb = b(j * 0.2); actor(n, lerp(-200 - j * 160, x, walkIn), 690 + bb.y, 285, { rot: bb.rot }); });
+    CAST.sydney.map((n, j) => [n, 300 + j * 160]).forEach(([n, x], j) => { const bb = b(j * 0.2); actor(n, lerp(-200 - j * 160, x, walkIn), 690 + bb.y, 285, { rot: bb.rot }); });
     if (i === 0) ctext('22 STRANGERS', 330, 120, 70, { scale: pop(ll, 0.3), rot: -0.05 });
   } else {
     decor('03-blue-mountains', clamp((t - C.v1_bm) / (s.to - C.v1_bm), 0, 1), { zoom: 0.07, panX: -30 });
     let rx = 800, mh = 'lach';
     if (i === 3) { const away = q < 0.55 ? ease(q / 0.4) : 1 - ease((q - 0.6) / 0.35); rx = lerp(800, 1180, away); mh = away > 0.3 ? 'schrik' : 'lach'; if (away > 0.3) ctext('HEY!', 1000, 200, 70, { scale: pop(ll, 0.25 * (bs[4] - bs[3])), rot: 0.1 }); }
-    [['lisette', 200], ['kees', 350], ['gemma', 500], ['henk', 650], ['robbert', rx]].forEach(([n, x], j) => { const bb = b(j * 0.2); actor(n, x, 690 + bb.y, 275, { rot: bb.rot }); });
+    [...CAST.blue.slice(0, 4).map((n, j) => [n, 200 + j * 150]), [CAST.blue[4], rx]].forEach(([n, x], j) => { const bb = b(j * 0.2); actor(n, x, 690 + bb.y, 275, { rot: bb.rot }); });
     if (i >= 2) {
       const mb = beatBob(t, 0.1, 6); const enter = ease((t - bs[2]) / 1.2);
       martin(lerp(1400, 1040, enter), 700 + mb.y, 400, { head: mh, headRot: mb.rot * 2 });
@@ -420,7 +468,8 @@ function sChorus(t, s, nr){
   const k = el < 0 ? 0 : Math.min(kMax, Math.floor(el / P) + 1);
   const f = k === 0 ? 1 : clamp((el - (k - 1) * P) / HOP, 0, 1), e = ease(f);
   const mod = v => ((v % N) + N) % N;
-  const people = [['lisette', 0.0, 0], ['kees', 0.6, 1], ['gemma', 0.5, 2], ['henk', 0.85, 3], ['robbert', 0.25, 4]].map(([n, ph, j]) => {
+  const PH = [0.0, 0.6, 0.5, 0.85, 0.25];
+  const people = CAST['ch' + nr].map((n, j) => [n, PH[j], j]).map(([n, ph, j]) => {
     const from = k === 0 ? j : mod(j - (k - 1)), to = k === 0 ? j : mod(j - k);
     const jumping = from === 0 && to === N - 1 && f < 1;
     return { n, ph, x: lerp(X[from], X[to], e), y: jumping ? -Math.sin(Math.PI * f) * 130 : 0, rot: jumping ? Math.sin(Math.PI * f) * 0.35 : 0, jumping };
@@ -446,7 +495,7 @@ function drawMinibus(cx, gy, t, line){
   if (!ok('minibus-aanhanger')) return;
   const im = IMG['minibus-aanhanger'], h = 230, w = h * im.width / im.height, s = h / im.height, x0 = cx - w / 2, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[390, 502], [516, 605], [620, 717], [739, 825]]; const heads = [['robbert'], ['lisette'], ['gemma'], null];
+  const wins = [[390, 502], [516, 605], [620, 717], [739, 825]]; const heads = [[CAST.minibus[0]], [CAST.minibus[1]], [CAST.minibus[2]], null];
   wins.forEach(([a, b], k) => {
     const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 88 * s, wh = 69 * s;
     ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip();
@@ -462,7 +511,7 @@ function drawCoach(x0, gy, t){
   const im = IMG['touringcar'], h = 290, s = h / im.height, w = im.width * s, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
   const wins = [[384, 470], [477, 558], [564, 652], [657, 741]];
-  [['kees', 0], ['henk', 1], ['lisette', 2], ['robbert', 3]].forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 40 * s, wh = 61 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.6, wh * 1.12, { rot: Math.sin(t * 6 + k) * 0.05 }); ctx.restore(); });
+  CAST.coach.map((n, k) => [n, k]).forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 40 * s, wh = 61 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.6, wh * 1.12, { rot: Math.sin(t * 6 + k) * 0.05 }); ctx.restore(); });
   // the driver behind the windscreen
   const fx = x0 + 760 * s, fw = 66 * s, fy = y0 + 48 * s, fh = 100 * s;
   ctx.save(); ctx.beginPath(); ctx.rect(fx, fy, fw, fh); ctx.clip(); actor('chauffeuse-stuur', fx + fw / 2, fy + fh + 6, fh * 1.25); ctx.restore();
@@ -484,14 +533,14 @@ function sV3a(t, s){
     const wx = lerp(1150, 720, ease(q / 0.5));
     [0, 1, 2].forEach(k => { const at = 0.35 + k * 0.18; const sc = pop(q * (bs[1] - bs[0]), at * (bs[1] - bs[0])); if (sc > 0 && ok('keutels')) { ctx.save(); ctx.translate(wx + 260 + k * 95, 660); ctx.scale(sc, sc); actor('keutels', 0, 0, 80); ctx.restore(); } });
     const wb = beatBob(t, 0, 4); actor('wombat', wx, 670 + wb.y, 230, { flip: true, rot: wb.rot * 0.5 });
-    [['lisette', 90], ['kees', 215], ['gemma', 340], ['henk', 465]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 10); actor(n, x, 700 + b.y, 255, { rot: b.rot }); });
+    CAST.wombat.map((n, j) => [n, 90 + j * 125]).forEach(([n, x], j) => { const b = beatBob(t, j * 0.25, 10); actor(n, x, 700 + b.y, 255, { rot: b.rot }); });
     ctext('SQUARE?!', 300, 130, 74, { scale: pop(ll, (bs[1] - bs[0]) * 0.55), rot: -0.08 });
   } else {
     const first = t < C.v3_wg;
     decor(first ? '07-cradle-mountain' : '08-wineglass-bay', first ? 1 : clamp((t - C.v3_wg) / (s.to - C.v3_wg), 0, 1), { zoom: 0.06 });
     if (first) { ctext('CRADLE IN SUNSHINE', 640, 120, 62, { scale: pop(ll, 0.1), rot: -0.03 }); }
     else { ctext('WINEGLASS BAY', 640, 110, 70, { scale: pop(t - C.v3_wg, 0), rot: 0.03, fill: '#7fe0f0' }); }
-    [['lisette', 260], ['kees', 450], ['gemma', 640], ['henk', 830], ['robbert', 1020]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 10); actor(n, x, 700 + b.y, 280, { rot: b.rot }); });
+    CAST.cradle.map((n, j) => [n, 260 + j * 190]).forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 10); actor(n, x, 700 + b.y, 280, { rot: b.rot }); });
   }
 }
 function sV3b(t, s){
@@ -500,7 +549,7 @@ function sV3b(t, s){
   rain(t, 70, 0.25);
   const dim = i === 0 ? ease(q) * 0.35 : 0.35 + Math.sin(t * 3) * 0.03;
   shade('#05070f', dim);
-  [['robbert', 110], ['kees', 255], ['lisette', 400], ['henk', 545], ['gemma', 690]].forEach(([n, x], j) => head(n, x, 555 + Math.sin(t * 2 + j) * 4, 170));
+  CAST.nightbus.map((n, j) => [n, 110 + j * 145]).forEach(([n, x], j) => head(n, x, 555 + Math.sin(t * 2 + j) * 4, 170));
   const bob = beatBob(t, 0, 4);
   actor('chauffeuse-verhaal', 1000, 735 + bob.y, 470, { rot: bob.rot * 0.6 });
   if (i === 1) ctext('...THAT COLD TASSIE NIGHT', 640, 120, 54, { scale: pop(t - bs[1], 0.4), fill: '#d9e4ff', rot: -0.02 });
@@ -537,7 +586,7 @@ function sV4(t, s){
     decor('11-twelve-apostles', q, { zoom: 0.04 });
     const P = [[161,264],[268,264],[356,230],[475,222],[605,207],[750,199],[879,218],[926,325]];
     counter(['1','2','3','4','5','6','7','8'], P.map(([x, y]) => [x, y - 40]), ll, 0.2, Math.max(0.12, (dl * 0.6) / 8));
-    [['lisette', 330], ['kees', 490], ['gemma', 650], ['henk', 810], ['robbert', 970]].forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 6); actor(n, x, 720 + b.y, 250, { rot: b.rot }); });
+    CAST.apostles.map((n, j) => [n, 330 + j * 160]).forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 6); actor(n, x, 720 + b.y, 250, { rot: b.rot }); });
     ctext('12?', 1130, 140, 96, { scale: pop(ll, dl * 0.75), rot: 0.12, fill: '#e0782f' });
   } else {
     const night = i === 3;
@@ -549,7 +598,7 @@ function sV4(t, s){
       const b = beatBob(t, 0, 8); actor('robbert', 250, 710 + b.y, 290, { rot: b.rot });
       ctext('HEY!?', 1080, 300, 58, { scale: pop(ll, dl * 0.5), rot: 0.1 });
     } else {
-      const pos = [['lisette', 140], ['kees', 290], ['gemma', 440], ['henk', 590], ['robbert', 740]];
+      const pos = CAST.count.map((n, j) => [n, 140 + j * 150]);
       pos.forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 4); actor(n, x, 700 + b.y, 270, { rot: b.rot }); });
       const mb = beatBob(t, 0, 4); martin(980, 710 + mb.y, 390, { head: 'lach', headRot: mb.rot * 2 });
       counter(['1','2','3','4','5'], pos.map(([, x]) => [x, 360]), ll, 0.4, Math.max(0.2, dl * 0.13));
@@ -564,9 +613,9 @@ function sFinal(t, s){
   const jump = TL.axes.filter(a => a >= s.from - 0.1 && a <= s.to);
   const jy = jump.reduce((m, a) => { const d = t - a; return d > 0 && d < 0.5 ? Math.min(m, -Math.sin(d / 0.5 * Math.PI) * 70) : m; }, 0);
   // the rest of the group in two rows at the back, jumping along
-  MATES.forEach((n, j) => { const back = j % 2, x = 70 + Math.floor(j / 2) * 160 + (back ? 80 : 0), b = beatBob(t, j * 0.13, 10);
+  CAST.back.forEach((n, j) => { const back = j % 2, x = 70 + Math.floor(j / 2) * 160 + (back ? 80 : 0), b = beatBob(t, j * 0.13, 10);
     actor(n, x, (back ? 545 : 605) + b.y + jy * 0.7, back ? 180 : 210, { rot: b.rot }); });
-  const line = [['lisette', 110], ['kees', 255], ['gemma', 400], ['robbert', 880], ['henk', 1025], ['chauffeuse-twee-vingers', 1170]];
+  const line = [...CAST.front.slice(0, 3).map((n, j) => [n, 110 + j * 145]), ...CAST.front.slice(3).map((n, j) => [n, 880 + j * 145]), ['chauffeuse-twee-vingers', 1170]];
   line.forEach(([n, x], j) => { const b = beatBob(t, j * 0.2, 14); actor(n, x, 700 + b.y + jy, 275, { rot: b.rot * 1.4 }); });
   const mb = beatBob(t, 0.5, 12); martin(640, 710 + mb.y + jy, 470, { head: Math.floor(t / (BEAT * 4)) % 2 ? 'schater' : 'lach', headRot: mb.rot * 3 });
   confetti(t, lt);
