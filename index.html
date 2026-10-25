@@ -118,6 +118,11 @@ const $ = id => document.getElementById(id);
 /* ---------- assets ---------- */
 const DECORS = ['01-outback-nacht','02-sydney','03-blue-mountains','04-outback-weg','05-touringcar-binnen','06-touringcar-nacht','07-cradle-mountain','08-wineglass-bay','09-bos-nacht','10-halls-gap','11-twelve-apostles','12-uluru'];
 const MATES = ['tanja','betty','ed','william','gijsje','adrie','nellie','dick','anne','john','coby','lut','dirk','geert','els','erik'];
+// per traveller: a size correction so heads look alike, and where the head sits in the picture [centre x, head height]
+const SIZE = {"robbert":0.992,"lisette":1.035,"gemma":0.938,"kees":0.938,"henk":1.035,"tanja":1.058,"betty":1.035,"ed":0.938,"william":0.973,"gijsje":1.035,"adrie":1.035,"nellie":0.992,"dick":1.24,"anne":0.921,"john":0.955,"coby":0.992,"lut":0.973,"dirk":1.138,"geert":1.013,"els":0.955,"erik":0.955};
+const HEADBOX = {"robbert":[132.8,233.3],"lisette":[117.4,214.7],"gemma":[151.9,261.3],"kees":[170.5,261.3],"henk":[126.6,214.7],"tanja":[138.7,205.3],"betty":[197.9,214.7],"ed":[184.5,261.3],"william":[156.7,242.7],"gijsje":[125.4,214.7],"adrie":[104.9,214.7],"nellie":[116.2,233.3],"dick":[140.9,149.3],"anne":[149.2,270.7],"john":[171.8,252.0],"coby":[181.5,233.3],"lut":[132.3,242.7],"dirk":[113.7,177.3],"geert":[111.2,224.0],"els":[181.1,252.0],"erik":[129.5,252.0]};
+// couples walk and appear together
+const UNITS = [['adrie','nellie'],['anne'],['betty'],['dick','coby'],['els','erik'],['geert'],['gemma'],['gijsje'],['henk'],['john'],['kees'],['lisette'],['lut','dirk'],['robbert'],['tanja'],['william','ed']];
 const SPRITES = [...MATES, 'boef','kees','henk','martin-lijf','martin-hoofd-lach','martin-hoofd-schater','martin-hoofd-schreeuw','martin-hoofd-schrik','robbert','lisette','gemma','chauffeuse-staand','chauffeuse-stuur','chauffeuse-twee-vingers','chauffeuse-verhaal','chauffeuse-woeshaa','pearce-sluipend','pearce-volle-buik','pearce-bijl-omhoog','wombat','keutels','koala-wakker','koala-slaapt','kangoeroe-staand','kangoeroe-springend','kangoeroe-liggend','kameel-blij','kameel-beledigd','barbecue','bijl','minibus-aanhanger','touringcar'];
 const IMG = {};
 let loaded = 0, ready = false;
@@ -259,6 +264,7 @@ function decor(n, p = 0, o = {}){
 function actor(n, x, gy, h, o = {}){
   if (!ok(n)) return;
   const im = o.sil ? sil(n, o.sil) : IMG[n];
+  h *= SIZE[n] || 1;
   const iw = IMG[n].width, ih = IMG[n].height, w = h * iw / ih;
   ctx.save(); ctx.translate(x, gy); ctx.rotate(o.rot || 0);
   ctx.scale((o.flip ? -1 : 1) * (o.sx || 1), o.sy || 1);
@@ -268,7 +274,11 @@ function actor(n, x, gy, h, o = {}){
 }
 function headCrop(n){ const im = IMG[n]; return [0, 0, im.width, im.height * 0.5]; }
 function head(n, x, cy, w, o = {}){
-  if (!ok(n)) return; const [sx, sy, sw, sh] = headCrop(n); const h = w * sh / sw;
+  if (!ok(n)) return;
+  let sx, sy, sw, sh;
+  if (HEADBOX[n]) { const [hx, hh] = HEADBOX[n], side = hh * 1.15; sx = hx - side / 2; sy = 0; sw = side; sh = side; }
+  else [sx, sy, sw, sh] = headCrop(n);
+  const h = w * sh / sw;
   ctx.save(); ctx.translate(x, cy); ctx.rotate(o.rot || 0); ctx.scale(o.sx || 1, o.sy || 1); ctx.globalAlpha = o.alpha ?? 1;
   ctx.drawImage(IMG[n], sx, sy, sw, sh, -w / 2, -h / 2, w, h); ctx.restore();
 }
@@ -348,7 +358,7 @@ const CREDITS = [
   ['02-sydney', 'martin', 'MARTIN', 'OUR GUIDE'],
   ['04-outback-weg', 'chauffeuse-staand', 'THE DRIVER', 'BEST STORYTELLER IN OZ']
 ];
-const PARADE = ['robbert', 'lisette', 'gemma', 'kees', 'henk', ...MATES].sort();
+const PARADE = UNITS;
 function sCredits(t, a, b){
   const CARD = 6, pa = a + CREDITS.length * CARD;
   if (t >= pa && b - pa > 8) return sParade(t, pa, b);
@@ -364,17 +374,18 @@ function sCredits(t, a, b){
 }
 // the mates walk past one by one, each with a name under their feet
 function sParade(t, a, b){
-  const lt = t - a, D = b - a, N = PARADE.length, GAP = 235;
-  const dist = W + 300 + (N - 1) * GAP, v = dist / (D - 0.8);
+  const lt = t - a, D = b - a, GAP = 250, PAIR = 160;
+  // x offset of every unit along the parade
+  const offs = []; let acc = 0; PARADE.forEach(u => { offs.push(acc); acc += GAP + (u.length - 1) * PAIR; });
+  const dist = W + 300 + offs[offs.length - 1] + (PARADE[PARADE.length - 1].length - 1) * PAIR, v = dist / (D - 0.8);
   decor('04-outback-weg', 0, { zoom: 0, scroll: lt * v * 0.35 });
   ctext('AND THE MATES', W / 2, 95, 70, { scale: pop(lt, 0.2), fill: '#f2b33d', rot: -0.03 });
   ctext('SAWADEE OZ CREW', W / 2, 160, 34, { scale: pop(lt, 0.5), fill: '#fff7dc' });
-  PARADE.forEach((n, j) => {
-    const x = W + 150 + j * GAP - lt * v;
-    if (x < -180 || x > W + 180) return;
-    const bb = beatBob(t, j * 0.37, 12);
-    actor(n, x, 625 + bb.y, 290, { rot: bb.rot });
-    ctext(n.toUpperCase(), x, 668, 40, { fill: '#fff7dc' });
+  PARADE.forEach((u, j) => {
+    const x0 = W + 150 + offs[j] - lt * v, mid = x0 + (u.length - 1) * PAIR / 2;
+    if (x0 + (u.length - 1) * PAIR < -200 || x0 > W + 200) return;
+    u.forEach((n, k) => { const bb = beatBob(t, j * 0.37 + k * 0.5, 12); actor(n, x0 + k * PAIR, 625 + bb.y, 285, { rot: bb.rot }); });
+    ctext(u.map(n => n.toUpperCase()).join(' & '), mid, 668, 40, { fill: '#fff7dc' });
   });
 }
 function sV1(t, s){
@@ -489,7 +500,7 @@ function sV3b(t, s){
   rain(t, 70, 0.25);
   const dim = i === 0 ? ease(q) * 0.35 : 0.35 + Math.sin(t * 3) * 0.03;
   shade('#05070f', dim);
-  [['robbert', 110], ['kees', 255], ['lisette', 400], ['henk', 545], ['gemma', 690]].forEach(([n, x], j) => head(n, x, 585 + Math.sin(t * 2 + j) * 4, 165));
+  [['robbert', 110], ['kees', 255], ['lisette', 400], ['henk', 545], ['gemma', 690]].forEach(([n, x], j) => head(n, x, 555 + Math.sin(t * 2 + j) * 4, 170));
   const bob = beatBob(t, 0, 4);
   actor('chauffeuse-verhaal', 1000, 735 + bob.y, 470, { rot: bob.rot * 0.6 });
   if (i === 1) ctext('...THAT COLD TASSIE NIGHT', 640, 120, 54, { scale: pop(t - bs[1], 0.4), fill: '#d9e4ff', rot: -0.02 });
@@ -562,13 +573,13 @@ function sFinal(t, s){
 }
 const ROLL = (() => {
   const nice = n => n.charAt(0).toUpperCase() + n.slice(1);
-  const mates = ['robbert', 'lisette', 'gemma', 'kees', 'henk', ...MATES].sort().map(n => [n, nice(n).toUpperCase(), '']);
+  const mates = UNITS.flat().map(n => [n, nice(n).toUpperCase(), '']);
   return [['martin-hoofd-lach', 'MARTIN', 'our guide'], ['chauffeuse-staand', 'THE DRIVER', 'storyteller'], ...mates];
 })();
 function badge(n, x, cy, r){
   ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.fillStyle = '#2a2016'; ctx.fill(); ctx.clip();
   if (n === 'martin-hoofd-lach') { const hd = IMG[n]; if (hd && hd.naturalWidth) { const w = r * 2.1, h = w * hd.height / hd.width; ctx.drawImage(hd, x - w / 2, cy - h / 2 + r * 0.08, w, h); } }
-  else head(n, x, cy + r * 0.1, r * 2.5);
+  else head(n, x, cy + r * 0.08, r * 2.15);
   ctx.restore();
   ctx.save(); ctx.beginPath(); ctx.arc(x, cy, r, 0, 7); ctx.lineWidth = 5; ctx.strokeStyle = '#f2b33d'; ctx.stroke(); ctx.restore();
 }
