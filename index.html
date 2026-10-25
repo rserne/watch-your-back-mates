@@ -88,7 +88,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .m-wrap{max-width:980px;margin:0 auto;padding:24px max(16px, env(safe-area-inset-left)) calc(40px + env(safe-area-inset-bottom))}
 .m-h1{font:400 clamp(40px,9vw,64px)/.95 Bangers,Impact,sans-serif;color:#ffd23f;margin:0 0 6px;text-shadow:3px 3px 0 #000;letter-spacing:.02em}
 .m-sub{margin:0 0 22px;color:#bfae96;font-weight:700}
-.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.m-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));grid-auto-flow:row dense;gap:14px}
 .m-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 8px 14px;border-radius:16px;border:1px solid #3b2f26;background:#211a15;color:var(--ink);cursor:pointer;font:inherit}
 .m-card.m-pair{grid-column:span 2}
 .m-card:hover{border-color:var(--accent)}
@@ -133,7 +133,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-tekst"><span class="tile-lyr"><span>Twenty-two strangers flew in from the cold</span><span>Sydney was shining, the Blue Mountains old</span><b>WOO... SHAAAAAA!</b><span>Down Under we go and we’re having a blast</span></span><span class="tile-body"><span class="tile-t">De songtekst</span><span class="tile-s">Het hele lied om mee te lezen</span></span></button>
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
-  <p class="stamp">versie 25-10 21.18</p>
+  <p class="stamp">versie 25-10 21.24</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
