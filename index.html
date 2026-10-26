@@ -72,6 +72,9 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .dlbar[hidden],.dlmsg[hidden],.dlopen[hidden]{display:none}
 .dlgo{flex:none;min-height:40px;padding:6px 14px;font-size:14px}
 .dlgo:disabled{opacity:.55;cursor:default}
+.dlrow .dlgo.now{background:#ffd23f;border-color:#ffd23f;color:#1b1410;animation:dlpulse 1.1s ease-in-out infinite}
+@keyframes dlpulse{0%,100%{box-shadow:0 0 0 0 rgba(255,210,63,.55)}50%{box-shadow:0 0 0 8px rgba(255,210,63,0)}}
+.dlmsg.step{color:#ffd23f}
 .dlmsg{margin:4px 2px 10px;font-weight:700;font-size:14px;line-height:1.45;color:#d9cdb8;text-align:center}
 .dlopen{display:block;text-align:center;margin:0 0 10px;color:#ffd23f;font-weight:800;font-size:14px}
 .dlclose{width:100%;justify-content:center;margin-top:4px}
@@ -177,7 +180,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 06.03</p>
+  <p class="stamp">versie 27-10 06.07</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -908,22 +911,31 @@ tap($('tekst-film'), () => { show('film'); play(); });
 {
   const ITEMS = {
     film: { url: 'film/Bedankt-Maarten-Watch-Your-Back-Mates.mp4', type: 'video/mp4',
-      share: 'De film is binnen. Tik op “Bewaar” en kies “Bewaar video” om hem in je foto’s te zetten.', saved: 'De film is binnen en staat in je downloads.' },
+      share: 'Nog één stap: tik op “Bewaar nu” en kies “Bewaar video”. Dan staat de film in je foto’s.', saved: 'De film is binnen en staat in je downloads.' },
     boekje: { url: 'film/Watch-Your-Back-Mates-songtekst-en-mates.pdf', type: 'application/pdf',
-      share: 'Het boekje is binnen. Tik op “Bewaar” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
+      share: 'Nog één stap: tik op “Bewaar nu” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
   };
-  const files = {}, subs = {}; let busy = null, ctrl = null;
+  const files = {}, subs = {}, saved = {}; let busy = null, ctrl = null, warned = false;
   const row = k => document.querySelector(`.dlrow[data-k="${k}"]`);
   const mb = n => { const v = n / 1048576; return v < 10 ? v.toFixed(1).replace('.', ',') : v.toFixed(0); };
-  const msg = t => { $('dl-msg').textContent = t || ''; $('dl-msg').hidden = !t; };
+  const msg = (t, step) => { $('dl-msg').textContent = t || ''; $('dl-msg').hidden = !t; $('dl-msg').classList.toggle('step', !!step); };
   const canShare = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; } };
   function saveAsFile(f){ const u = URL.createObjectURL(f), a = document.createElement('a'); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
-  function done(k){
+  async function share(k){
+    const f = files[k], go = row(k).querySelector('.dlgo');
+    try { await navigator.share({ files: [f], title: 'Bedankt, Maarten!' }); saved[k] = true; go.classList.remove('now'); go.textContent = 'Nog eens'; msg('Bewaard. Veel plezier ermee!'); return true; }
+    catch (e) { if (e.name !== 'AbortError' && e.name !== 'NotAllowedError') { saveAsFile(f); saved[k] = true; } return false; }
+  }
+  async function done(k){
     const r = row(k), f = files[k], go = r.querySelector('.dlgo');
     r.querySelector('.dlbar i').style.width = '100%'; r.querySelector('.dlsub').textContent = mb(f.size) + ' MB · klaar';
     go.disabled = false;
-    if (canShare(f)) { go.textContent = 'Bewaar'; msg(ITEMS[k].share); }
-    else { go.textContent = 'Opnieuw'; msg(ITEMS[k].saved); saveAsFile(f); }
+    if (canShare(f)) {
+      // straight to the share sheet when the browser still allows it (usually after a short download)
+      if (await share(k)) return;
+      go.textContent = 'Bewaar nu'; go.classList.add('now'); msg(ITEMS[k].share, true);
+    }
+    else { go.textContent = 'Nog eens'; saveAsFile(f); saved[k] = true; msg(ITEMS[k].saved); }
   }
   async function fetchItem(k){
     const it = ITEMS[k], r = row(k), go = r.querySelector('.dlgo'), bar = r.querySelector('.dlbar'), sub = r.querySelector('.dlsub');
@@ -947,12 +959,17 @@ tap($('tekst-film'), () => { show('film'); play(); });
       if (busy) return;
       const f = files[k];
       if (!f) return fetchItem(k);
-      if (canShare(f)) { try { await navigator.share({ files: [f], title: 'Bedankt, Maarten!' }); } catch (e) { if (e.name !== 'AbortError') saveAsFile(f); } }
-      else saveAsFile(f);
+      if (canShare(f)) await share(k);
+      else { saveAsFile(f); saved[k] = true; }
     });
   });
-  tap($('dl'), () => { $('dlbox').hidden = false; });
-  tap($('dl-close'), () => { if (ctrl) ctrl.abort(); $('dlbox').hidden = true; });
+  tap($('dl'), () => { warned = false; $('dlbox').hidden = false; });
+  tap($('dl-close'), () => {
+    // a file that is downloaded but not yet saved: remind once before closing
+    const left = Object.keys(files).find(k => !saved[k]);
+    if (left && !warned) { warned = true; msg((left === 'film' ? 'De film' : 'Het boekje') + ' is nog niet bewaard. Tik eerst op “Bewaar nu”. Sluit je nu, dan moet je straks opnieuw downloaden.', true); return; }
+    if (ctrl) ctrl.abort(); $('dlbox').hidden = true;
+  });
 }
 // after turning the phone, iOS can leave the touch areas of fixed screens where they were: reset the page scroll and re-lay the visible screen (keeping its scroll position)
 {
