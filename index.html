@@ -135,7 +135,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-tekst"><span class="tile-lyr"><span>Twenty-two strangers flew in from the cold</span><span>Sydney was shining, the Blue Mountains old</span><b>WOO... SHAAAAAA!</b><span>Down Under we go and we’re having a blast</span></span><span class="tile-body"><span class="tile-t">De songtekst</span><span class="tile-s">Het hele lied om mee te lezen</span></span></button>
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
-  <p class="stamp">versie 26-10 20.02</p>
+  <p class="stamp">versie 26-10 20.48</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -558,11 +558,16 @@ function drawCoach(x0, gy, t){
   if (!ok('touringcar')) return;
   const im = IMG['touringcar'], h = 290, s = h / im.height, w = im.width * s, y0 = gy - h;
   ctx.drawImage(im, x0, y0, w, h);
-  const wins = [[384, 470], [477, 558], [564, 652], [657, 741]];
-  CAST.coach.map((n, k) => [n, k]).forEach(([n, k]) => { const [a, b] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 40 * s, wh = 61 * s; ctx.save(); ctx.beginPath(); ctx.rect(wx + 1, wy + 1, ww - 2, wh - 2); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.6, wh * 1.12, { rot: Math.sin(t * 6 + k) * 0.05 }); ctx.restore(); });
-  // the driver behind the windscreen
-  const fx = x0 + 760 * s, fw = 66 * s, fy = y0 + 48 * s, fh = 100 * s;
-  ctx.save(); ctx.beginPath(); ctx.rect(fx, fy, fw, fh); ctx.clip(); actor('chauffeuse-stuur', fx + fw / 2, fy + fh + 6, fh * 1.25); ctx.restore();
+  // window edges and the y of the glass bottom at its left and right (the front window slopes down)
+  const wins = [[384, 470, 100, 100], [477, 558, 101, 101], [564, 652, 101, 103], [657, 741, 105, 118]];
+  CAST.coach.map((n, k) => [n, k]).forEach(([n, k]) => { const [a, b, bl, br] = wins[k]; const wx = x0 + a * s, ww = (b - a) * s, wy = y0 + 40 * s, wh = 61 * s, drop = ((bl + br) / 2 - 101) * s; ctx.save(); ctx.beginPath(); ctx.moveTo(wx + 1, wy + 1); ctx.lineTo(wx + ww - 1, wy + 1); ctx.lineTo(wx + ww - 1, y0 + br * s - 1); ctx.lineTo(wx + 1, y0 + bl * s - 1); ctx.closePath(); ctx.clip(); head(n, wx + ww / 2, wy + wh * 0.6 + drop, wh * 1.12, { rot: Math.sin(t * 6 + k) * 0.05 }); ctx.restore(); });
+  // the driver behind the curved door window: clip to the real shape of the glass, then lay a little of the glass back over her
+  const GLASS = [[752,42],[782,46],[796,54],[806,66],[813,78],[819,90],[823,102],[827,114],[829,126],[832,138],[833,150],[834,162],[835,169],[829,169],[811,162],[792,154],[782,146],[778,138],[770,130],[758,126],[751,118],[750,86],[750,46]];
+  ctx.save(); ctx.beginPath(); GLASS.forEach(([gx, gy2], k) => { const px = x0 + gx * s, py = y0 + gy2 * s; if (k) ctx.lineTo(px, py); else ctx.moveTo(px, py); }); ctx.closePath(); ctx.clip();
+  ctx.fillStyle = '#2d3f52'; ctx.fillRect(x0 + 745 * s, y0 + 38 * s, 95 * s, 135 * s);
+  actor('chauffeuse-stuur', x0 + 793 * s, y0 + 186 * s, 128 * s);
+  ctx.globalAlpha = 0.16; ctx.drawImage(im, x0, y0, w, h); ctx.globalAlpha = 1;
+  ctx.restore();
 }
 function sEcho(t, s){
   const C = CUES, bs = [C.echo, C.echo_2, C.echo_3, s.to]; const [i, q] = idxIn(t, bs); const lt = t - s.from, ll = t - bs[i];
