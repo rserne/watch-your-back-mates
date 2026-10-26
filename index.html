@@ -53,6 +53,10 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .start[hidden]{display:none}
 .start h1{margin:0;font:400 clamp(38px,8vmin,76px)/.95 Bangers,Impact,sans-serif;letter-spacing:.02em;color:#ffd23f;text-align:center;text-shadow:3px 3px 0 #000;text-wrap:balance}
 .stamp{margin:18px 0 0;font-size:12px;color:#6f6152;text-align:center}
+.dl{display:inline-flex;align-items:center;gap:9px;margin:22px auto 0;padding:11px 20px;border-radius:999px;border:1px solid #4a3b2f;background:#1e1813;color:#ffd23f;font-weight:800;font-size:15px;text-decoration:none}
+.dl svg{width:18px;height:18px}
+.dl small{font-weight:700;color:#bfae96;font-size:13px}
+@media (max-height:500px) and (orientation:landscape){ .dl{margin-top:12px;padding:8px 16px;font-size:14px} .stamp{margin-top:8px} }
 .song{margin:6px 0 0;font:400 clamp(22px,4.2vmin,36px)/1 Bangers,Impact,sans-serif;letter-spacing:.04em;color:#e0782f;text-align:center;text-shadow:2px 2px 0 #000}
 .kicker{margin:8px 0 clamp(16px,3.5vh,32px);font-weight:700;font-size:clamp(14px,2.2vmin,17px);color:#bfae96;text-align:center}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px;width:100%;max-width:900px}
@@ -135,7 +139,8 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-tekst"><span class="tile-lyr"><span>Twenty-two strangers flew in from the cold</span><span>Sydney was shining, the Blue Mountains old</span><b>WOO... SHAAAAAA!</b><span>Down Under we go and we’re having a blast</span></span><span class="tile-body"><span class="tile-t">De songtekst</span><span class="tile-s">Het hele lied om mee te lezen</span></span></button>
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
-  <p class="stamp">versie 26-10 20.48</p>
+  <a class="dl" href="film/Bedankt-Maarten-Watch-Your-Back-Mates.mp4" download="Bedankt-Maarten-Watch-Your-Back-Mates.mp4" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Download de film <small>mp4 · 60 MB</small></a>
+  <p class="stamp">versie 26-10 21.05</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
