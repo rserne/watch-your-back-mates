@@ -53,23 +53,29 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .start[hidden]{display:none}
 .start h1{margin:0;font:400 clamp(38px,8vmin,76px)/.95 Bangers,Impact,sans-serif;letter-spacing:.02em;color:#ffd23f;text-align:center;text-shadow:3px 3px 0 #000;text-wrap:balance}
 .stamp{margin:18px 0 0;font-size:12px;color:#6f6152;text-align:center}
-.dls{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 12px;margin:22px auto 0}
-.dl{cursor:pointer;font-family:Nunito,system-ui,sans-serif;display:inline-flex;align-items:center;gap:9px;margin:0;padding:11px 20px;border-radius:999px;border:1px solid #4a3b2f;background:#1e1813;color:#ffd23f;font-weight:800;font-size:15px;text-decoration:none}
+.dl{cursor:pointer;font-family:Nunito,system-ui,sans-serif;display:inline-flex;align-items:center;gap:9px;margin:22px auto 0;padding:11px 20px;border-radius:999px;border:1px solid #4a3b2f;background:#1e1813;color:#ffd23f;font-weight:800;font-size:15px;text-decoration:none}
 .dl svg{width:18px;height:18px}
 .dl small{font-weight:700;color:#bfae96;font-size:13px}
 .dlbox{position:fixed;inset:0;z-index:60;background:rgba(10,8,6,.82);display:flex;align-items:center;justify-content:center;padding:20px}
 .dlbox[hidden]{display:none}
-.dlcard{width:100%;max-width:400px;background:#1e1813;border:1px solid #4a3b2f;border-radius:20px;padding:22px 22px 18px;color:#f3e8d6;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
-.dlcard h2{margin:0 0 6px;font:400 30px Bangers,Impact,sans-serif;letter-spacing:.03em;color:#ffd23f}
-.dlcard p{margin:0 0 14px;font-weight:700;font-size:15px;line-height:1.45;color:#d9cdb8}
-.dlbar{height:12px;border-radius:99px;background:#3b2f26;overflow:hidden;margin:6px 0 8px}
+.dlcard{width:100%;max-width:440px;background:#1e1813;border:1px solid #4a3b2f;border-radius:20px;padding:22px 20px 18px;color:#f3e8d6;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.dlcard h2{margin:0 0 4px;font:400 30px Bangers,Impact,sans-serif;letter-spacing:.03em;color:#ffd23f;text-align:center}
+.dlintro{margin:0 0 14px;font-weight:700;font-size:14px;line-height:1.45;color:#bfae96;text-align:center}
+.dlrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #3b2f26;border-radius:14px;background:#15110e;margin-bottom:10px}
+.dlico{flex:none;width:40px;height:40px;border-radius:10px;background:#2a211b;color:#ffd23f;display:grid;place-items:center}
+.dlico svg{width:24px;height:24px}
+.dlinfo{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px}
+.dlinfo b{font-weight:800;font-size:16px;color:#fff7e8}
+.dlsub{font-weight:700;font-size:12.5px;color:#bfae96;font-variant-numeric:tabular-nums}
+.dlbar{display:block;height:8px;border-radius:99px;background:#3b2f26;overflow:hidden;margin-top:5px}
 .dlbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#e0782f,#ffd23f);border-radius:99px}
-.dlnum{font-weight:800;font-size:14px;color:#bfae96;margin-bottom:14px;font-variant-numeric:tabular-nums}
-.dlbtns{display:flex;flex-direction:column;gap:10px;align-items:stretch}
-.dlbtns .pill{justify-content:center}
-.dlbtns a.pill{text-decoration:none}
-.dlbtns [hidden],.dlbar[hidden]{display:none}
-@media (max-height:500px) and (orientation:landscape){ .dls{margin-top:12px} .dl{padding:8px 16px;font-size:14px} .stamp{margin-top:8px} }
+.dlbar[hidden],.dlmsg[hidden],.dlopen[hidden]{display:none}
+.dlgo{flex:none;min-height:40px;padding:6px 14px;font-size:14px}
+.dlgo:disabled{opacity:.55;cursor:default}
+.dlmsg{margin:4px 2px 10px;font-weight:700;font-size:14px;line-height:1.45;color:#d9cdb8;text-align:center}
+.dlopen{display:block;text-align:center;margin:0 0 10px;color:#ffd23f;font-weight:800;font-size:14px}
+.dlclose{width:100%;justify-content:center;margin-top:4px}
+@media (max-height:500px) and (orientation:landscape){ .dl{margin-top:12px;padding:8px 16px;font-size:14px} .stamp{margin-top:8px} }
 .song{margin:6px 0 0;font:400 clamp(22px,4.2vmin,36px)/1 Bangers,Impact,sans-serif;letter-spacing:.04em;color:#e0782f;text-align:center;text-shadow:2px 2px 0 #000}
 .kicker{margin:8px 0 clamp(16px,3.5vh,32px);font-weight:700;font-size:clamp(14px,2.2vmin,17px);color:#bfae96;text-align:center}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));gap:16px;width:100%;max-width:900px}
@@ -146,14 +152,20 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 </div>
 <div class="dlbox" id="dlbox" hidden role="dialog" aria-modal="true" aria-labelledby="dl-t"><div class="dlcard">
   <h2 id="dl-t">Downloaden</h2>
-  <p id="dl-msg">Even geduld...</p>
-  <div class="dlbar" id="dl-barw"><i id="dl-bar"></i></div>
-  <div class="dlnum" id="dl-num">0 MB</div>
-  <div class="dlbtns">
-    <button class="pill primary" id="dl-save" type="button" hidden>Bewaar of deel</button>
-    <a class="pill" id="dl-open" href="#" target="_blank" rel="noopener" hidden>Open in de browser</a>
-    <button class="pill" id="dl-close" type="button">Sluiten</button>
+  <p class="dlintro">Bewaar de film of het boekje met de songtekst en de mates op je telefoon of computer.</p>
+  <div class="dlrow" data-k="film">
+    <span class="dlico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M10 9.2v5.6a.6.6 0 0 0 .9.5l4.6-2.8a.6.6 0 0 0 0-1l-4.6-2.8a.6.6 0 0 0-.9.5z"/></svg></span>
+    <span class="dlinfo"><b>De film</b><small class="dlsub">mp4 · 58 MB</small><span class="dlbar" hidden><i></i></span></span>
+    <button class="pill primary dlgo" type="button">Download</button>
   </div>
+  <div class="dlrow" data-k="boekje">
+    <span class="dlico"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M6 3h8l4 4v14H6z M14 3v4h4"/><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9 12h6M9 16h6"/></svg></span>
+    <span class="dlinfo"><b>Het boekje</b><small class="dlsub">pdf · 6 MB</small><span class="dlbar" hidden><i></i></span></span>
+    <button class="pill primary dlgo" type="button">Download</button>
+  </div>
+  <p class="dlmsg" id="dl-msg" hidden></p>
+  <a class="dlopen" id="dl-open" href="#" target="_blank" rel="noopener" hidden>Open in de browser</a>
+  <button class="pill dlclose" id="dl-close" type="button">Sluiten</button>
 </div></div>
 <div class="start" id="start">
   <h1>Bedankt, Maarten!</h1>
@@ -164,11 +176,8 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-tekst"><span class="tile-lyr"><span>Twenty-two strangers flew in from the cold</span><span>Sydney was shining, the Blue Mountains old</span><b>WOO... SHAAAAAA!</b><span>Down Under we go and we’re having a blast</span></span><span class="tile-body"><span class="tile-t">De songtekst</span><span class="tile-s">Het hele lied om mee te lezen</span></span></button>
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
-  <div class="dls">
-    <button class="dl" data-dl="film" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Download de film <small>mp4 · 58 MB</small></button>
-    <button class="dl" data-dl="boekje" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Download het boekje <small>pdf · 6 MB</small></button>
-  </div>
-  <p class="stamp">versie 27-10 05.59</p>
+  <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
+  <p class="stamp">versie 27-10 06.03</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -894,48 +903,55 @@ document.querySelectorAll('.m-card').forEach(c => tap(c, () => {
 }));
 tap($('m-zoom'), () => { $('m-zoom').hidden = true; });
 tap($('tekst-film'), () => { show('film'); play(); });
-// Download: fetch the film or the booklet with a progress bar, then offer it to the share sheet (iPhone) or save it as a file
+// Downloads: one button opens a small window with the film and the booklet; each downloads with its own progress bar,
+// then goes to the share sheet (iPhone: Bewaar video / Bewaar in Bestanden) or is saved as a file
 {
   const ITEMS = {
-    film: { url: 'film/Bedankt-Maarten-Watch-Your-Back-Mates.mp4', type: 'video/mp4', title: 'Film downloaden', wait: 'Even geduld, de film wordt opgehaald. Op wifi gaat dit het snelst.',
-      share: 'De film is binnen. Tik hieronder en kies daarna “Bewaar video” om hem in je foto’s te zetten.', saved: 'De film is binnen en staat nu in je downloads.' },
-    boekje: { url: 'film/Watch-Your-Back-Mates-songtekst-en-mates.pdf', type: 'application/pdf', title: 'Boekje downloaden', wait: 'Even geduld, het boekje wordt opgehaald.',
-      share: 'Het boekje is binnen. Tik hieronder en kies daarna “Bewaar in Bestanden”, of open het in Boeken.', saved: 'Het boekje is binnen en staat nu in je downloads.' }
+    film: { url: 'film/Bedankt-Maarten-Watch-Your-Back-Mates.mp4', type: 'video/mp4',
+      share: 'De film is binnen. Tik op “Bewaar” en kies “Bewaar video” om hem in je foto’s te zetten.', saved: 'De film is binnen en staat in je downloads.' },
+    boekje: { url: 'film/Watch-Your-Back-Mates-songtekst-en-mates.pdf', type: 'application/pdf',
+      share: 'Het boekje is binnen. Tik op “Bewaar” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
   };
-  const files = {}; let cur = null, busy = false, ctrl = null;
+  const files = {}, subs = {}; let busy = null, ctrl = null;
+  const row = k => document.querySelector(`.dlrow[data-k="${k}"]`);
   const mb = n => { const v = n / 1048576; return v < 10 ? v.toFixed(1).replace('.', ',') : v.toFixed(0); };
-  const set = (msg, pct, num) => { if (msg != null) $('dl-msg').textContent = msg; if (pct != null) $('dl-bar').style.width = pct + '%'; if (num != null) $('dl-num').textContent = num; };
+  const msg = t => { $('dl-msg').textContent = t || ''; $('dl-msg').hidden = !t; };
   const canShare = f => { try { return !!(navigator.canShare && navigator.canShare({ files: [f] })); } catch (e) { return false; } };
   function saveAsFile(f){ const u = URL.createObjectURL(f), a = document.createElement('a'); a.href = u; a.download = f.name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); }
-  function ready(key){
-    const it = ITEMS[key], f = files[key];
-    set(null, 100, mb(f.size) + ' MB · klaar'); $('dl-save').hidden = false;
-    if (canShare(f)) { $('dl-save').textContent = 'Bewaar of deel'; set(it.share); }
-    else { $('dl-save').textContent = 'Opnieuw opslaan'; set(it.saved); saveAsFile(f); }
+  function done(k){
+    const r = row(k), f = files[k], go = r.querySelector('.dlgo');
+    r.querySelector('.dlbar i').style.width = '100%'; r.querySelector('.dlsub').textContent = mb(f.size) + ' MB · klaar';
+    go.disabled = false;
+    if (canShare(f)) { go.textContent = 'Bewaar'; msg(ITEMS[k].share); }
+    else { go.textContent = 'Opnieuw'; msg(ITEMS[k].saved); saveAsFile(f); }
   }
-  async function start(key){
-    if (busy) return;
-    const it = ITEMS[key]; cur = key;
-    $('dl-t').textContent = it.title; $('dlbox').hidden = false; $('dl-save').hidden = true; $('dl-open').hidden = true; $('dl-open').href = it.url;
-    if (files[key]) return ready(key);
-    busy = true; set(it.wait, 0, '0 MB');
+  async function fetchItem(k){
+    const it = ITEMS[k], r = row(k), go = r.querySelector('.dlgo'), bar = r.querySelector('.dlbar'), sub = r.querySelector('.dlsub');
+    busy = k; go.disabled = true; go.textContent = 'Bezig...'; bar.hidden = false; bar.firstChild.style.width = '0'; msg(''); $('dl-open').hidden = true;
     try {
       ctrl = new AbortController();
-      const r = await fetch(it.url, { signal: ctrl.signal }); if (!r.ok) throw new Error(r.status);
-      const total = +r.headers.get('content-length') || 0, rd = r.body.getReader(), parts = []; let got = 0;
-      for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length;
-        set(null, total ? got / total * 100 : 50, total ? `${mb(got)} van ${mb(total)} MB` : `${mb(got)} MB`); }
-      files[key] = new File(parts, it.url.split('/').pop(), { type: it.type }); ready(key);
+      const res = await fetch(it.url, { signal: ctrl.signal }); if (!res.ok) throw new Error(res.status);
+      const total = +res.headers.get('content-length') || 0, rd = res.body.getReader(), parts = []; let got = 0;
+      for (;;) { const { done: end, value } = await rd.read(); if (end) break; parts.push(value); got += value.length;
+        bar.firstChild.style.width = (total ? got / total * 100 : 50) + '%'; sub.textContent = total ? `${mb(got)} van ${mb(total)} MB` : `${mb(got)} MB`; }
+      files[k] = new File(parts, it.url.split('/').pop(), { type: it.type }); done(k);
     } catch (e) {
-      if (e.name !== 'AbortError') { set('Het downloaden lukte niet. Probeer het straks nog eens op wifi, of open het bestand in de browser en bewaar het van daaruit.', 0, ''); $('dl-open').hidden = false; }
-    } finally { busy = false; ctrl = null; }
+      go.disabled = false; go.textContent = 'Download'; bar.hidden = true; sub.textContent = subs[k];
+      if (e.name !== 'AbortError') { msg('Het downloaden lukte niet. Probeer het straks nog eens op wifi, of open het bestand in de browser en bewaar het van daaruit.'); $('dl-open').href = it.url; $('dl-open').hidden = false; }
+    } finally { busy = null; ctrl = null; }
   }
-  document.querySelectorAll('[data-dl]').forEach(b => tap(b, () => start(b.dataset.dl)));
-  $('dl-save').addEventListener('click', async () => {
-    const f = files[cur]; if (!f) return;
-    if (canShare(f)) { try { await navigator.share({ files: [f], title: 'Bedankt, Maarten!' }); } catch (e) { if (e.name !== 'AbortError') saveAsFile(f); } }
-    else saveAsFile(f);
+  document.querySelectorAll('.dlrow').forEach(r => {
+    const k = r.dataset.k; subs[k] = r.querySelector('.dlsub').textContent;
+    // the share sheet needs the tap itself, so this stays a plain click
+    r.querySelector('.dlgo').addEventListener('click', async () => {
+      if (busy) return;
+      const f = files[k];
+      if (!f) return fetchItem(k);
+      if (canShare(f)) { try { await navigator.share({ files: [f], title: 'Bedankt, Maarten!' }); } catch (e) { if (e.name !== 'AbortError') saveAsFile(f); } }
+      else saveAsFile(f);
+    });
   });
+  tap($('dl'), () => { $('dlbox').hidden = false; });
   tap($('dl-close'), () => { if (ctrl) ctrl.abort(); $('dlbox').hidden = true; });
 }
 // after turning the phone, iOS can leave the touch areas of fixed screens where they were: reset the page scroll and re-lay the visible screen (keeping its scroll position)
