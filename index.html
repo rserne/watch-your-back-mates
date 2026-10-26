@@ -61,6 +61,10 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 .dlcard{width:100%;max-width:440px;background:#1e1813;border:1px solid #4a3b2f;border-radius:20px;padding:22px 20px 18px;color:#f3e8d6;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .dlcard h2{margin:0 0 4px;font:400 30px Bangers,Impact,sans-serif;letter-spacing:.03em;color:#ffd23f;text-align:center}
 .dlintro{margin:0 0 14px;font-weight:700;font-size:14px;line-height:1.45;color:#bfae96;text-align:center}
+.dlsteps{margin:-4px 0 14px;padding:10px 12px 10px 34px;border-radius:12px;background:#2a211b;font-weight:700;font-size:13.5px;line-height:1.45;color:#d9cdb8}
+.dlsteps[hidden]{display:none}
+.dlsteps li+li{margin-top:4px}
+.dlsteps b{color:#ffd23f;font-weight:800}
 .dlrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #3b2f26;border-radius:14px;background:#15110e;margin-bottom:10px}
 .dlico{flex:none;width:40px;height:40px;border-radius:10px;background:#2a211b;color:#ffd23f;display:grid;place-items:center}
 .dlico svg{width:24px;height:24px}
@@ -155,7 +159,8 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
 </div>
 <div class="dlbox" id="dlbox" hidden role="dialog" aria-modal="true" aria-labelledby="dl-t"><div class="dlcard">
   <h2 id="dl-t">Downloaden</h2>
-  <p class="dlintro">Bewaar de film of het boekje met de songtekst en de mates op je telefoon of computer.</p>
+  <p class="dlintro" id="dl-intro">Bewaar de film of het boekje met de songtekst en de mates op je telefoon of computer.</p>
+  <ol class="dlsteps" id="dl-steps" hidden><li><b>Download</b> de film of het boekje</li><li>Tik daarna op <b>Bewaar nu</b> en kies <b>Bewaar video</b> of <b>Bewaar in Bestanden</b></li></ol>
   <div class="dlrow" data-k="film">
     <span class="dlico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path fill="currentColor" d="M10 9.2v5.6a.6.6 0 0 0 .9.5l4.6-2.8a.6.6 0 0 0 0-1l-4.6-2.8a.6.6 0 0 0-.9.5z"/></svg></span>
     <span class="dlinfo"><b>De film</b><small class="dlsub">mp4 · 58 MB</small><span class="dlbar" hidden><i></i></span></span>
@@ -180,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 06.07</p>
+  <p class="stamp">versie 27-10 06.08</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -911,9 +916,9 @@ tap($('tekst-film'), () => { show('film'); play(); });
 {
   const ITEMS = {
     film: { url: 'film/Bedankt-Maarten-Watch-Your-Back-Mates.mp4', type: 'video/mp4',
-      share: 'Nog één stap: tik op “Bewaar nu” en kies “Bewaar video”. Dan staat de film in je foto’s.', saved: 'De film is binnen en staat in je downloads.' },
+      share: 'Stap 2: tik op “Bewaar nu” en kies “Bewaar video”. Dan staat de film in je foto’s.', saved: 'De film is binnen en staat in je downloads.' },
     boekje: { url: 'film/Watch-Your-Back-Mates-songtekst-en-mates.pdf', type: 'application/pdf',
-      share: 'Nog één stap: tik op “Bewaar nu” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
+      share: 'Stap 2: tik op “Bewaar nu” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
   };
   const files = {}, subs = {}, saved = {}; let busy = null, ctrl = null, warned = false;
   const row = k => document.querySelector(`.dlrow[data-k="${k}"]`);
@@ -931,8 +936,6 @@ tap($('tekst-film'), () => { show('film'); play(); });
     r.querySelector('.dlbar i').style.width = '100%'; r.querySelector('.dlsub').textContent = mb(f.size) + ' MB · klaar';
     go.disabled = false;
     if (canShare(f)) {
-      // straight to the share sheet when the browser still allows it (usually after a short download)
-      if (await share(k)) return;
       go.textContent = 'Bewaar nu'; go.classList.add('now'); msg(ITEMS[k].share, true);
     }
     else { go.textContent = 'Nog eens'; saveAsFile(f); saved[k] = true; msg(ITEMS[k].saved); }
@@ -963,6 +966,11 @@ tap($('tekst-film'), () => { show('film'); play(); });
       else { saveAsFile(f); saved[k] = true; }
     });
   });
+  // phones and tablets save through the share sheet: tell up front that saving is a second step
+  if (canShare(new File([new Uint8Array(1)], 'x.pdf', { type: 'application/pdf' }))) {
+    $('dl-intro').textContent = 'Bewaar de film of het boekje met de songtekst en de mates op je telefoon. Dat gaat in twee stappen.';
+    $('dl-steps').hidden = false;
+  }
   tap($('dl'), () => { warned = false; $('dlbox').hidden = false; });
   tap($('dl-close'), () => {
     // a file that is downloaded but not yet saved: remind once before closing
