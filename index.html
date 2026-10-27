@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 09.41</p>
+  <p class="stamp">versie 27-10 09.44</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -662,8 +662,8 @@ function sV3b(t, s){
   if (i === 1) ctext('...THAT COLD TASSIE NIGHT', 640, 120, 54, { scale: pop(t - bs[1], 0.4), fill: '#d9e4ff', rot: -0.02 });
 }
 function sPearce(t, s){
-  const C = CUES; const bs = [C.pearce, C.pearce_2, C.pearce_3, C.pearce_4, C.pearce_5, C.pearce_shout - 0.3];
-  const lt = t - s.from; const pre = t < C.pearce_shout - 0.3;
+  const C = CUES; const bs = [C.pearce, C.pearce_2, C.pearce_3, C.pearce_4, C.pearce_5, C.pearce_shout];
+  const lt = t - s.from; const pre = t < C.pearce_shout; // the full belly stays until the SHAAA, then the axe goes up
   decor('09-bos-nacht', clamp(lt / (s.to - s.from), 0, 1), { zoom: 0.1 });
   shade('#04060d', 0.25); rain(t, 180, 0.5);
   if (pre) {
