@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 09.33</p>
+  <p class="stamp">versie 27-10 10.16</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -454,7 +454,8 @@ function build(){
   add(C.v4, C.fin_a, sV4, 'v4');
   add(C.fin_a, C.outro, sFinal, 'fin');
   add(C.outro, D + 1, sOutro, 'outro');
-  const axes = [C.intro_shout, C.ch1a, C.ch1b, C.pearce_shout, C.ch2a, C.ch2b, C.fin_a, C.fin_b, ...(C.extras || [])].filter(v => isFinite(v)).sort((a, b) => a - b).filter((v, i, a) => i === 0 || v - a[i - 1] > 1.2);
+  // no WOO-SHAAA is sung at the end of the Pearce story, so no text or flying axe there
+  const axes = [C.intro_shout, C.ch1a, C.ch1b, C.ch2a, C.ch2b, C.fin_a, C.fin_b, ...(C.extras || [])].filter(v => isFinite(v)).sort((a, b) => a - b).filter((v, i, a) => i === 0 || v - a[i - 1] > 1.2);
   TL = { segs, subs, axes };
 }
 
