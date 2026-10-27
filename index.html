@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 09.44</p>
+  <p class="stamp">versie 27-10 09.52</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -306,7 +306,7 @@ const CUE_DEFS = [
   ['outro_shout', 'Laatste woo-shaa', 'De zachte "woo... shaaa" in de verte']
 ];
 const CUE_KEYS = CUE_DEFS.map(d => d[0]);
-const MEASURED = {"intro_shout":12.24,"v1":53.28,"ch1a":69.3,"ch1b":83.03,"v2":89.8,"echo":105.21,"v3":116.03,"v3b":122.46,"pearce":131.32,"pearce_shout":146.81,"ch2a":152.01,"ch2b":167.92,"v4":176.35,"fin_a":195.02,"fin_b":209.99,"outro":216.6,"intro_talk":2.63,"outro_shout":221.71,"v1_2":56.68,"v1_bm":58.13,"v1_3":59.85,"v1_4":63.33,"ch1_1":71.7,"ch1_2":75.18,"ch1_3":78.45,"v2_2":93.13,"v2_3":96.5,"v2_4":99.94,"echo_2":108.04,"echo_3":111.26,"v3_2":119.2,"v3_wg":120.81,"v3_4":126.02,"pearce_2":135.16,"pearce_3":138.47,"pearce_4":141.64,"pearce_5":145.06,"ch2_1":156.48,"ch2_2":160.1,"ch2_3":163.33,"v4_2":179.62,"v4_3":183.25,"v4_4":186.63,"fin_1":199.02,"fin_2":202.02,"fin_3":205.42};
+const MEASURED = {"intro_shout":12.24,"v1":53.28,"ch1a":69.3,"ch1b":83.03,"v2":89.8,"echo":105.21,"v3":116.03,"v3b":122.46,"pearce":131.32,"pearce_shout":146.81,"pearce_axe":149.1,"ch2a":152.01,"ch2b":167.92,"v4":176.35,"fin_a":195.02,"fin_b":209.99,"outro":216.6,"intro_talk":2.63,"outro_shout":221.71,"v1_2":56.68,"v1_bm":58.13,"v1_3":59.85,"v1_4":63.33,"ch1_1":71.7,"ch1_2":75.18,"ch1_3":78.45,"v2_2":93.13,"v2_3":96.5,"v2_4":99.94,"echo_2":108.04,"echo_3":111.26,"v3_2":119.2,"v3_wg":120.81,"v3_4":126.02,"pearce_2":135.16,"pearce_3":138.47,"pearce_4":141.64,"pearce_5":145.06,"ch2_1":156.48,"ch2_2":160.1,"ch2_3":163.33,"v4_2":179.62,"v4_3":183.25,"v4_4":186.63,"fin_1":199.02,"fin_2":202.02,"fin_3":205.42};
 // fill cues that were never measured by spreading them evenly between their measured neighbours
 function fillCues(c){
   const known = CUE_KEYS.map(k => isFinite(c[k]) ? +c[k] : null);
@@ -438,7 +438,7 @@ function build(){
   const SUBS = [
     [L.intro, ['intro_talk', 'intro_shout']], [L.v1, ['v1', 'v1_2', 'v1_3', 'v1_4', 'ch1a']], [L.ch, ['ch1_1', 'ch1_2', 'ch1_3', 'ch1b']],
     [L.v2, ['v2', 'v2_2', 'v2_3', 'v2_4', 'echo']], [L.echo, ['echo', 'echo_2', 'echo_3', 'v3']], [L.v3, ['v3', 'v3_2', 'v3b', 'v3_4', 'pearce']],
-    [L.pearce, ['pearce', 'pearce_2', 'pearce_3', 'pearce_4', 'pearce_5', 'pearce_shout']], [L.ch, ['ch2_1', 'ch2_2', 'ch2_3', 'ch2b']],
+    [L.pearce, ['pearce', 'pearce_2', 'pearce_3', 'pearce_4', 'pearce_5', C.pearce_axe != null ? 'pearce_axe' : 'pearce_shout']], [L.ch, ['ch2_1', 'ch2_2', 'ch2_3', 'ch2b']],
     [L.v4, ['v4', 'v4_2', 'v4_3', 'v4_4', 'fin_a']], [L.fin, ['fin_1', 'fin_2', 'fin_3', 'fin_b']], [L.outro, ['outro', 'outro_shout']]
   ];
   for (const [arr, ks] of SUBS) arr.forEach((tx, i) => { const a = C[ks[i]], b = C[ks[i + 1]]; subs.push({ a, b: Math.max(a + 0.5, Math.min(b - 0.25, a + 7)), tx }); });
@@ -662,8 +662,10 @@ function sV3b(t, s){
   if (i === 1) ctext('...THAT COLD TASSIE NIGHT', 640, 120, 54, { scale: pop(t - bs[1], 0.4), fill: '#d9e4ff', rot: -0.02 });
 }
 function sPearce(t, s){
-  const C = CUES; const bs = [C.pearce, C.pearce_2, C.pearce_3, C.pearce_4, C.pearce_5, C.pearce_shout];
-  const lt = t - s.from; const pre = t < C.pearce_shout; // the full belly stays until the SHAAA, then the axe goes up
+  // he keeps his full belly until "...and a very full belly" has been sung, then lifts the axe
+  const AXE_UP = CUES.pearce_axe ?? CUES.pearce_shout;
+  const C = CUES; const bs = [C.pearce, C.pearce_2, C.pearce_3, C.pearce_4, C.pearce_5, AXE_UP];
+  const lt = t - s.from; const pre = t < AXE_UP;
   decor('09-bos-nacht', clamp(lt / (s.to - s.from), 0, 1), { zoom: 0.1 });
   shade('#04060d', 0.25); rain(t, 180, 0.5);
   if (pre) {
@@ -674,7 +676,7 @@ function sPearce(t, s){
     if (i === 3) { const wb = beatBob(t, 0, 12); actor('pearce-volle-buik', lerp(1400, 640, ease(q / 0.8)), 690 + wb.y, 420, { rot: wb.rot * 1.6 }); } // he comes back already well fed
     if (i === 4) { const z = 1 + q * 0.12; ctx.save(); ctx.translate(640, 690); ctx.scale(z, z); actor('pearce-volle-buik', 0, 0, 420); ctx.restore(); ctext('BURP', 860, 260, 60, { scale: pop(ll, dl * 0.6), rot: 0.1, fill: '#cfc6b8' }); }
   } else {
-    const d = t - C.pearce_shout;
+    const d = t - AXE_UP;
     actor('pearce-bijl-omhoog', 640, 700, 450, { rot: Math.sin(t * 12) * 0.03 });
     const sc = pop(d, -0.1); if (sc > 0) { ctx.save(); ctx.translate(1060, 520); ctx.scale(sc, sc); actor('chauffeuse-woeshaa', 0, 200, 280); ctx.restore(); }
   }
