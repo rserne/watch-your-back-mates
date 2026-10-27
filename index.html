@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 06.08</p>
+  <p class="stamp">versie 27-10 09.33</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -306,7 +306,7 @@ const CUE_DEFS = [
   ['outro_shout', 'Laatste woo-shaa', 'De zachte "woo... shaaa" in de verte']
 ];
 const CUE_KEYS = CUE_DEFS.map(d => d[0]);
-const MEASURED = {"intro_shout":12.26,"v1":53.32,"ch1a":69.28,"ch1b":83.04,"v2":89.75,"echo":105.18,"v3":115.99,"v3b":122.42,"pearce":131.32,"pearce_shout":146.86,"ch2a":152.04,"ch2b":168,"v4":176.3,"fin_a":194.97,"fin_b":210.2,"outro":216.75,"intro_talk":2.57,"outro_shout":221.45,"v1_2":56.77,"v1_bm":58.1,"v1_3":59.83,"v1_4":63.32,"ch1_1":71.62,"ch1_2":75.24,"ch1_3":78.74,"v2_2":93.16,"v2_3":96.47,"v2_4":99.85,"echo_2":108.02,"echo_3":111.15,"v3_2":119.22,"v3_wg":120.82,"v3_4":125.87,"pearce_2":135.17,"pearce_3":138.46,"pearce_4":141.64,"pearce_5":145.02,"ch2_1":156.66,"ch2_2":160.18,"ch2_3":163.33,"v4_2":179.51,"v4_3":183.18,"v4_4":186.6,"fin_1":198.98,"fin_2":202.07,"fin_3":205.44};
+const MEASURED = {"intro_shout":12.24,"v1":53.28,"ch1a":69.3,"ch1b":83.03,"v2":89.8,"echo":105.21,"v3":116.03,"v3b":122.46,"pearce":131.32,"pearce_shout":146.81,"ch2a":152.01,"ch2b":167.92,"v4":176.35,"fin_a":195.02,"fin_b":209.99,"outro":216.6,"intro_talk":2.63,"outro_shout":221.71,"v1_2":56.68,"v1_bm":58.13,"v1_3":59.85,"v1_4":63.33,"ch1_1":71.7,"ch1_2":75.18,"ch1_3":78.45,"v2_2":93.13,"v2_3":96.5,"v2_4":99.94,"echo_2":108.04,"echo_3":111.26,"v3_2":119.2,"v3_wg":120.81,"v3_4":126.02,"pearce_2":135.16,"pearce_3":138.47,"pearce_4":141.64,"pearce_5":145.06,"ch2_1":156.48,"ch2_2":160.1,"ch2_3":163.33,"v4_2":179.62,"v4_3":183.25,"v4_4":186.63,"fin_1":199.02,"fin_2":202.02,"fin_3":205.42};
 // fill cues that were never measured by spreading them evenly between their measured neighbours
 function fillCues(c){
   const known = CUE_KEYS.map(k => isFinite(c[k]) ? +c[k] : null);
