@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 09.33</p>
+  <p class="stamp">versie 27-10 09.41</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -671,7 +671,7 @@ function sPearce(t, s){
     if (i === 0) { ctext('1822', 640, 160, 130, { scale: pop(ll, 0.2), fill: '#cfc6b8', alpha: 0.9 }); for (let k = 0; k < 8; k++) { const x = lerp(-120, 1400, clamp(q * 1.2 - k * 0.06, 0, 1)); actor('boef', x, 640 + Math.abs(Math.sin(t * 9 + k)) * -10, 150, { sil: '#0b0907', flip: true }); } }
     if (i === 1) { actor('pearce-sluipend', lerp(1150, 300, ease(q)), 680 + Math.sin(t * 8) * 5, 330, { rot: Math.sin(t * 8) * 0.04 }); ctext('GRRRUMBLE...', 900, 150, 58, { scale: pop(ll, dl * 0.4), rot: 0.06, fill: '#cfc6b8' }); }
     if (i === 2) { const left = 8 - Math.min(7, Math.floor(q * 8.5)); for (let k = 0; k < 8; k++) { if (k >= left) continue; actor('boef', 170 + k * 135, 640, 170, { sil: '#0b0907' }); } ctext(String(left), 640, 150, 110, { fill: '#cfc6b8', num: true }); }
-    if (i === 3) { actor('pearce-sluipend', lerp(1400, 640, ease(q / 0.8)), 690 + Math.sin(t * 8) * 4, 380); }
+    if (i === 3) { const wb = beatBob(t, 0, 12); actor('pearce-volle-buik', lerp(1400, 640, ease(q / 0.8)), 690 + wb.y, 420, { rot: wb.rot * 1.6 }); } // he comes back already well fed
     if (i === 4) { const z = 1 + q * 0.12; ctx.save(); ctx.translate(640, 690); ctx.scale(z, z); actor('pearce-volle-buik', 0, 0, 420); ctx.restore(); ctext('BURP', 860, 260, 60, { scale: pop(ll, dl * 0.6), rot: 0.1, fill: '#cfc6b8' }); }
   } else {
     const d = t - C.pearce_shout;
