@@ -185,7 +185,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 27-10 10.20</p>
+  <p class="stamp">versie 28-10 13.24</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -922,6 +922,15 @@ tap($('tekst-film'), () => { show('film'); play(); });
     boekje: { url: 'film/Watch-Your-Back-Mates-songtekst-en-mates.pdf', type: 'application/pdf',
       share: 'Stap 2: tik op “Bewaar nu” en kies “Bewaar in Bestanden” of open het in Boeken.', saved: 'Het boekje is binnen en staat in je downloads.' }
   };
+  const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const ANDROID = /Android/i.test(navigator.userAgent);
+  function directDownload(k){
+    const it = ITEMS[k], r = row(k), a = document.createElement('a');
+    a.href = it.url; a.download = it.url.split('/').pop(); a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+    saved[k] = true; r.querySelector('.dlsub').textContent = 'download gestart'; r.querySelector('.dlgo').textContent = 'Nog eens';
+    msg(ANDROID ? (k === 'film' ? 'De download is gestart. Je ziet hem bovenin bij je meldingen. Daarna staat de film in je map Downloads en meestal ook in je Galerij of Google Foto’s.' : 'De download is gestart. Je ziet hem bovenin bij je meldingen. Daarna staat het boekje in je map Downloads.')
+                : 'De download is gestart. Het bestand komt in je map Downloads.');
+  }
   const files = {}, subs = {}, saved = {}; let busy = null, ctrl = null, warned = false;
   const row = k => document.querySelector(`.dlrow[data-k="${k}"]`);
   const mb = n => { const v = n / 1048576; return v < 10 ? v.toFixed(1).replace('.', ',') : v.toFixed(0); };
@@ -962,14 +971,16 @@ tap($('tekst-film'), () => { show('film'); play(); });
     // the share sheet needs the tap itself, so this stays a plain click
     r.querySelector('.dlgo').addEventListener('click', async () => {
       if (busy) return;
+      // Android and computers: let the browser download the file itself (it lands in Downloads, with its own progress)
+      if (!IOS) { directDownload(k); return; }
       const f = files[k];
       if (!f) return fetchItem(k);
       if (canShare(f)) await share(k);
       else { saveAsFile(f); saved[k] = true; }
     });
   });
-  // phones and tablets save through the share sheet: tell up front that saving is a second step
-  if (canShare(new File([new Uint8Array(1)], 'x.pdf', { type: 'application/pdf' }))) {
+  // only iPhone and iPad save through the share sheet: tell up front that saving is a second step
+  if (IOS) {
     $('dl-intro').textContent = 'Bewaar de film of het boekje met de songtekst en de mates op je telefoon. Dat gaat in twee stappen.';
     $('dl-steps').hidden = false;
   }
