@@ -23,9 +23,7 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;800&display=swap">
+<style>@font-face{font-family:Bangers;font-display:swap;src:url(fonts/bangers-latin-400-normal.woff2) format("woff2")}@font-face{font-family:Nunito;font-weight:400;font-display:swap;src:url(fonts/nunito-latin-400-normal.woff2) format("woff2")}@font-face{font-family:Nunito;font-weight:400;font-style:italic;font-display:swap;src:url(fonts/nunito-latin-400-italic.woff2) format("woff2")}@font-face{font-family:Nunito;font-weight:700;font-display:swap;src:url(fonts/nunito-latin-700-normal.woff2) format("woff2")}@font-face{font-family:Nunito;font-weight:800;font-display:swap;src:url(fonts/nunito-latin-800-normal.woff2) format("woff2")}</style>
 <style>
 /* A bare cinema: the film fills the screen on black, controls only appear while paused. Black in light and dark mode by choice. */
 :root{ --bg:#000; --ink:#fff7e8; --accent:#e0782f; --veil:rgba(0,0,0,0.45); color-scheme:dark; }
@@ -185,7 +183,7 @@ canvas{display:block;width:min(100vw, calc(100dvh * 16 / 9));height:auto;aspect-
     <button class="tile" id="go-mates"><span class="tile-mates"><img src="img/lisette.webp" alt=""><img src="img/kees.webp" alt=""><img src="img/coby.webp" alt=""><img src="img/john.webp" alt=""></span><span class="tile-body"><span class="tile-t">De mates</span><span class="tile-s">De hele groep, één voor één</span></span></button>
   </div>
   <button class="dl" id="dl" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>Downloaden <small>film of boekje</small></button>
-  <p class="stamp">versie 28-10 13.24</p>
+  <p class="stamp">versie 29-10 06.06</p>
 </div>
 <section class="lyrics mates" id="mates" hidden aria-label="De mates">
   <div class="lyr-bar"><button class="pill" id="mates-terug"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>Terug</button><button class="pill primary" id="mates-film"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M6 3.5v17a1 1 0 0 0 1.5.86l14-8.5a1 1 0 0 0 0-1.72l-14-8.5A1 1 0 0 0 6 3.5z"/></svg>Film bekijken</button></div>
@@ -1056,5 +1054,6 @@ requestAnimationFrame(loop);
 Promise.all([loadAll(), document.fonts ? Promise.all([document.fonts.load('80px Bangers'), document.fonts.load('800 30px Nunito'), document.fonts.load('700 36px Nunito')]).catch(() => {}) : null]).then(() => { ready = true; build(); });
 })();
 </script>
+<script>if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));</script>
 </body>
 </html>
