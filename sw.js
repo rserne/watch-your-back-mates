@@ -1,6 +1,6 @@
 // Offline support: everything the film, the lyrics and the mates need is stored on the device at first visit.
 // The big download files (film/) are left out; they are only fetched when someone taps Download.
-const CACHE = 'wybm-20261029-0606';
+const CACHE = 'wybm-20261029-0940';
 const ASSETS = [
 "./",
 "index.html",
